@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "lib/consts.hxx"
 #include "lib/mat.hxx"
 
 using namespace astro;
@@ -55,6 +56,40 @@ TEST(MatrixTest, Instantiates) {
   ASSERT_DOUBLE_EQ(7.0, m[2][0]);
   ASSERT_DOUBLE_EQ(8.0, m[2][1]);
   ASSERT_DOUBLE_EQ(9.0, m[2][2]);
+}
+
+TEST(MatrixTest, GettersOfColsAndRowsWork) {
+  Mat3 m{
+    1.0, 2.0, 3.0,
+    4.0, 5.0, 6.0,
+    7.0, 8.0, 9.0,
+  };
+
+  auto x = m.Row(0);
+  ASSERT_DOUBLE_EQ(1.0, x[0]);
+  ASSERT_DOUBLE_EQ(2.0, x[1]);
+  ASSERT_DOUBLE_EQ(3.0, x[2]);
+  x = m.Row(1);
+  ASSERT_DOUBLE_EQ(4.0, x[0]);
+  ASSERT_DOUBLE_EQ(5.0, x[1]);
+  ASSERT_DOUBLE_EQ(6.0, x[2]);
+  x = m.Row(2);
+  ASSERT_DOUBLE_EQ(7.0, x[0]);
+  ASSERT_DOUBLE_EQ(8.0, x[1]);
+  ASSERT_DOUBLE_EQ(9.0, x[2]);
+
+  x = m.Col(0);
+  ASSERT_DOUBLE_EQ(1.0, x[0]);
+  ASSERT_DOUBLE_EQ(4.0, x[1]);
+  ASSERT_DOUBLE_EQ(7.0, x[2]);
+  x = m.Col(1);
+  ASSERT_DOUBLE_EQ(2.0, x[0]);
+  ASSERT_DOUBLE_EQ(5.0, x[1]);
+  ASSERT_DOUBLE_EQ(8.0, x[2]);
+  x = m.Col(2);
+  ASSERT_DOUBLE_EQ(3.0, x[0]);
+  ASSERT_DOUBLE_EQ(6.0, x[1]);
+  ASSERT_DOUBLE_EQ(9.0, x[2]);
 }
 
 TEST(MatrixTest, ArithmeticsWork) {
@@ -146,4 +181,20 @@ TEST(MatrixTest, Transposes) {
 }
 
 TEST(MatrixTest, Rotates) {
+  Vec3 x{1.0, 1.0, 1.0}, y;
+
+  y = x * Mat3::RotateX(kPi);
+  ASSERT_DOUBLE_EQ( 1.0, y[0]);
+  ASSERT_DOUBLE_EQ(-1.0, y[1]);
+  ASSERT_DOUBLE_EQ(-1.0, y[2]);
+
+  y = x * Mat3::RotateY(kPi);
+  ASSERT_DOUBLE_EQ(-1.0, y[0]);
+  ASSERT_DOUBLE_EQ( 1.0, y[1]);
+  ASSERT_DOUBLE_EQ(-1.0, y[2]);
+
+  y = x * Mat3::RotateZ(kPi);
+  ASSERT_DOUBLE_EQ(-1.0, y[0]);
+  ASSERT_DOUBLE_EQ(-1.0, y[1]);
+  ASSERT_DOUBLE_EQ( 1.0, y[2]);
 }
