@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <chrono>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -16,6 +17,8 @@
 #include "lib/time.hxx"
 #include "lib/spheric.hxx"
 #include "lib/ppmxlreader.hxx"
+
+namespace chrono = std::chrono;
 
 std::string LoadFile(char const *fpath) {
   std::string s;
@@ -268,11 +271,15 @@ struct Starsky {
   {}
 
   void Init() {
-    time_ = std::time(nullptr);
+    time_ = chrono::steady_clock::now();
 
-    std::tm tm = *std::gmtime(&time_);
+    auto time = std::time_t(chrono::duration_cast<chrono::seconds>(time_.time_since_epoch()).count());
+    std::tm tm = *std::gmtime(&time);
+    using milliseconds_type = std::chrono::duration<double, std::chrono::milliseconds::period>;
+    auto secs = tm.tm_sec + chrono::duration_cast<milliseconds_type>(time_.time_since_epoch()).count();
+    secs = std::fmod(secs, 1.0);
     double mjd = astro::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
-                            tm.tm_hour, tm.tm_min, tm.tm_sec);
+                            tm.tm_hour, tm.tm_min, secs);
     double gmst = astro::GMST(mjd) + positionLongitude_;
 
     std::cerr << "Latitude: " << astro::FormatDMS(positionLatitude_ * astro::kDeg) << '\n';
@@ -284,7 +291,6 @@ struct Starsky {
   }
   
   void LoadStars(std::istream &is) {
-    std::size_t nStars{0};
     PPMXLReader reader(is);
     PPMXLReader::Row data;
     while (reader >> data) {
@@ -293,7 +299,7 @@ struct Starsky {
     INFO("%d stars loaded from the catalogue\n", entries_.size());
   }
 
-  void SetTime(std::time_t time) {
+  void SetTime(chrono::steady_clock::time_point const &time) {
     time_ = time;
   }
 
@@ -309,9 +315,13 @@ struct Starsky {
   void VertexizeStars() {
     Reset();
 
-    std::tm tm = *std::gmtime(&time_);
+    auto time = std::time_t(chrono::duration_cast<chrono::seconds>(time_.time_since_epoch()).count());
+    std::tm tm = *std::gmtime(&time);
+    using milliseconds_type = std::chrono::duration<double, std::chrono::milliseconds::period>;
+    auto secs = tm.tm_sec + chrono::duration_cast<milliseconds_type>(time_.time_since_epoch()).count();
+    secs = std::fmod(secs, 1.0);
     double const mjd = astro::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
-                                  tm.tm_hour, tm.tm_min, tm.tm_sec);
+                                  tm.tm_hour, tm.tm_min, secs);
     double const gmst = astro::GMST(mjd) + positionLongitude_;
 
     for (auto const &data : entries_) {      
@@ -325,7 +335,7 @@ struct Starsky {
       // DEBUG("data: ipix=%llu, ra=%lf (%lf), delta=%lf (%lf)\n",
       //       data.Ipix, data.RaJ2000, ra, data.DecJ2000, delta);
     
-      ProcessStar(ra, delta, gmst, data.Jmag / (2.5 / 10.0) + 5.0);
+      ProcessStar(gmst - ra, delta, data.Jmag / (2.5 / 10.0) + 5.0);
       
       // double const tau = gmst - ra;
 
@@ -351,7 +361,7 @@ struct Starsky {
       return;
 
     // North and South poles.
-    ProcessStar(0.0,  astro::kPi/2.0, gmst, 40);
+    ProcessStar(gmst,  astro::kPi/2.0, 40);
     // ProcessStar(0.0, -astro::kPi/2.0, gmst, 40);
 
     // Deneb
@@ -363,34 +373,44 @@ struct Starsky {
     // ProcessStar(astro::FromDMS(5, 40, 45.52666) * 15.0, astro::FromDMS(-1,  56, 34.2649));
 
     // Cassiopeiea
-    ProcessStar(astro::FromDMS(0, 40, 30.4405)  * 15.0 * astro::kRad, astro::FromDMS(56, 32, 14.3920) * astro::kRad, gmst, 30);
-    ProcessStar(astro::FromDMS(0,  9, 10.68518) * 15.0 * astro::kRad, astro::FromDMS(59,  8, 59.2120) * astro::kRad, gmst, 30);
-    ProcessStar(astro::FromDMS(0, 56, 42.50108) * 15.0 * astro::kRad, astro::FromDMS(60, 43,  0.2984) * astro::kRad, gmst, 30);
-    ProcessStar(astro::FromDMS(1, 25, 48.95147) * 15.0 * astro::kRad, astro::FromDMS(60, 14,  7.0225) * astro::kRad, gmst, 30);
-    ProcessStar(astro::FromDMS(1, 54, 23.72567) * 15.0 * astro::kRad, astro::FromDMS(63, 40, 12.3628) * astro::kRad, gmst, 30);
+    ProcessStar(gmst - astro::FromDMS(0, 40, 30.4405)  * 15.0 * astro::kRad, astro::FromDMS(56, 32, 14.3920) * astro::kRad, 30);
+    ProcessStar(gmst - astro::FromDMS(0,  9, 10.68518) * 15.0 * astro::kRad, astro::FromDMS(59,  8, 59.2120) * astro::kRad, 30);
+    ProcessStar(gmst - astro::FromDMS(0, 56, 42.50108) * 15.0 * astro::kRad, astro::FromDMS(60, 43,  0.2984) * astro::kRad, 30);
+    ProcessStar(gmst - astro::FromDMS(1, 25, 48.95147) * 15.0 * astro::kRad, astro::FromDMS(60, 14,  7.0225) * astro::kRad, 30);
+    ProcessStar(gmst - astro::FromDMS(1, 54, 23.72567) * 15.0 * astro::kRad, astro::FromDMS(63, 40, 12.3628) * astro::kRad, 30);
 
     // Sun
     {
       double epoch = (mjd - astro::kMJD_J2000) / 36525.0;
       auto vec = astro::SunPos(epoch);
+      // std::cerr << "ecl sun = " << vec << '\n';
       vec = astro::Ecl2EquMatrix(epoch) * vec;
+      // std::cerr << "equ sun = " << vec << '\n';
       // The z axis is directed towards to the north celestial polar.
       // To align with the model axis it has to be rotated relatively x on 90 degrees.
-      vec = astro::Mat3::RotateX(-astro::kPi/2.0) * vec;
-      // The y axis has got reversed direction.
-      vec[1] = -vec[1];
+      // vec = astro::Mat3::RotateX(-astro::kPi/2.0) * vec;
+      // The y axis has got to be reversed direction.
+      // vec[2] = -vec[2];
       auto sun = astro::MakePolar(vec);
-      double h, az;
-      astro::Equ2Hor(sun.Theta, sun.Phi, positionLatitude_, h, az);
-      ProcessStar(az, h, gmst, 75);
+      // std::cerr << "polar sun = " << vec << '\n';
+      // ProcessStar(sun.Phi, sun.Theta, 75);
+      double elev, az;
+      astro::Equ2Hor(sun.Theta, gmst - sun.Phi, positionLatitude_, elev, az);
+      // std::cerr << "elev = " << elev << "; az = " << az << '\n';
+      ProcessStar(az, elev, 75);
     }
   }
   
-  void ProcessStar(double ra, double decl, double gmst, int mag) {
-    double const tau = gmst - ra;
-    double az, elev;
-    astro::Equ2Hor(decl, tau, positionLatitude_, elev, az);
+  void ProcessStar(double ha, double decl, double mag) {
+    // double az, elev;
+    // astro::Equ2Hor(decl, ha, positionLatitude_, elev, az);
 
+    // DrawStar(az, elev, mag);
+
+    DrawStar(ha, decl, mag);
+  }
+  
+  void DrawStar(double az, double elev, double mag) {
     float x = std::sin(az) * std::cos(elev);
     float y = std::sin(elev);
     float z = std::cos(az) * std::cos(elev);
@@ -406,14 +426,14 @@ struct Starsky {
     y = vec[1];
     z = vec[2];
 
-    if (y < 0)
-      return;
+    // if (y < 0)
+    //   return;
 
     // float d = x*x + y*y + z*z;
     
     // DEBUG("vertexing a star: x=% .08f, y=% .08f, z=% .08f, mag=%2i, d=%f\n", x, y, z, mag, d);
 
-    Vertex v{x, y, z, float{mag}/3.15f};
+    Vertex v{x, y, z, float{mag/3.15}};
     stars_.push_back(v);
   }
 
@@ -433,7 +453,7 @@ struct Starsky {
   double const positionLatitude_  = 53.319927 * astro::kRad;
   double const positionLongitude_ = -6.264353 * astro::kRad;
 
-  std::time_t time_ = 0;
+  chrono::steady_clock::time_point time_;
   bool showExtra_ = true;
 
   // Look at the North polar star.
@@ -446,9 +466,11 @@ struct Starsky {
 
 struct GraphicsProgram : public Graphics {
   void Run(Starsky &sky) {    
-    std::time_t now;
+    auto const timeBeginning = chrono::steady_clock::now();
+    double const timeScale = 600.0;
     while (!glfwWindowShouldClose(window_)) {
-      now = std::time(nullptr);
+      chrono::steady_clock::time_point now = chrono::steady_clock::now();
+      now += chrono::duration_cast<chrono::nanoseconds>((now - timeBeginning) * timeScale);
 
       glViewport(0, 0, WindowWidth(), WindowHeight());
 
@@ -510,8 +532,8 @@ struct GraphicsProgram : public Graphics {
   }
 
  private:
-  double viewAngleX_ = -0;//astro::kPi/2.0;
-  double viewAngleY_ =  0;// astro::kPi;
+  double viewAngleX_ = -(90.0 - 53.319927) * astro::kRad; // astro::kPi/2.0;
+  double viewAngleY_ =  0; // astro::kPi;
 };
 
 int main() {
