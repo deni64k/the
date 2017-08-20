@@ -1,223 +1,36 @@
 #include <cassert>
-#include <cstdarg>
-#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <chrono>
 #include <fstream>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 #include "lib/consts.hxx"
+#include "lib/graphics.hxx"
+#include "lib/log.hxx"
+#include "lib/ppmxlreader.hxx"
+#include "lib/spheric.hxx"
 #include "lib/sun.hxx"
 #include "lib/time.hxx"
-#include "lib/spheric.hxx"
-#include "lib/ppmxlreader.hxx"
 
 namespace chrono = std::chrono;
 
-std::string LoadFile(char const *fpath) {
-  std::string s;
-  if (std::ifstream is{fpath, std::ios::binary | std::ios::ate}) {
-    fprintf(stderr, "reading %s\n", fpath);
-
-    auto size = is.tellg();
-    s.resize(size);
-    is.seekg(0);
-    if (!is.read(s.data(), size))
-      throw std::runtime_error("could not read file");
-  }
-  return std::move(s);
-}
-
-void Log(char const *format, ...) {
-  va_list argptr;
-  va_start(argptr, format);
-  vfprintf(stderr, format, argptr);
-  va_end(argptr);
-}
-
-#define DEBUG(format, args...) Log("DEBUG: %s:%d: " format, __func__, __LINE__, ##args)
-#define ERROR(format, args...) Log("DEBUG: " format, ##args)
-#define INFO(format, args...)  Log("INFO: " format, ##args)
-
-struct Starsky;
-
-struct Vertex {
-  float coords[3];
-  float mag;
-} __attribute__((packed));
-// typedef GLfloat Vertex[4];
-
-struct Graphics {
-  void Init() {
-    using namespace std::placeholders;
-
-    glfwSetErrorCallback(Graphics::OnGlfwErrorCallback_);
-
-    // start GL context and O/S window using the GLFW helper library
-    if (!glfwInit()) {
-      throw std::runtime_error("could not start GLFW3");
-    }
-    glfwInitialized_ = true;
-
-#ifdef __APPLE__
-    // Get the newest available version of OpenGL on Apple,
-    // which will be 4.1 or 3.3 on Mavericks, and 3.2 on
-    // pre-Mavericks systems.
-    // On other systems it will tend to pick 3.2 instead of
-    // the newest version, which is unhelpful.
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#endif
-
-    glfwWindowHint(GLFW_SAMPLES, 4);
-
-    // GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    // GLFWvidmode const *vmode = glfwGetVideoMode(monitor);
-    // window_ = glfwCreateWindow(
-    //     vmode->width, vmode->height, "Stars sky", monitor, NULL);
-    window_ = glfwCreateWindow(
-        WindowWidth(), WindowHeight(), "Stars sky", nullptr, nullptr);
-    if (!window_) {
-      throw std::runtime_error("could not open window with GLFW3");
-    }
-    glfwGetFramebufferSize(window_, &Graphics::windowWidth_, &Graphics::windowHeight_);
-    glfwSetWindowSizeCallback(window_, &Graphics::OnGlfwWindowSizeCallback_);
-    glfwMakeContextCurrent(window_);
-                                  
-    // start GLEW extension handler
-    glewExperimental = GL_TRUE;
-    glewInit();
-
-    // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    glEnable(GL_DEPTH_TEST); // enable depth-testing
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glEnable(GL_POINT_SMOOTH);
-    glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
-    glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST);
-  }
-
-  void LoadPoints(GLfloat *points, GLuint size) {
-    size_ = size;
-    glGenBuffers(1, vbo_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * size, points, GL_DYNAMIC_DRAW);
-
-    glGenVertexArrays(1, vao_);
-    glBindVertexArray(vao_[0]);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-  }
-
-  void UpdatePoints(GLfloat *points, GLuint size) {
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * size, points);
-  }
-
-  void LoadShaders() {    
-    std::string vertex_shader(LoadFile("lib/shaders/vertex.glsl"));
-    std::string fragment_shader(LoadFile("lib/shaders/fragment.glsl"));
-
-    shaderProgramme_ = CompileShaders(vertex_shader.c_str(), fragment_shader.c_str());
-  }
-
-  GLuint CompileShaders(char const *vertex_shader, char const *fragment_shader) {
-    // Create and compile vertex shader.
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader, NULL);
-    glCompileShader(vs);
-
-    // Create and compile fragment shader.
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader, NULL);
-    glCompileShader(fs);
-
-    // Create program, attach shaders to it, and link it.
-    GLuint program = glCreateProgram();
-    glAttachShader(program, fs);
-    glAttachShader(program, vs);
-    glLinkProgram(program);
-
-    // Delete the shaders as the program has them now.
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-  }
-
-  void Deinit() {
-    // close GL context and any other GLFW resources
-    if (!glfwInitialized_) {
-      glfwTerminate();
-      glfwInitialized_ = false;
-    }
-    // TODO: Delete only if it has been compiled before.
-    glDeleteProgram(shaderProgramme_);
-    glDeleteVertexArrays(1, vao_);
-    glDeleteVertexArrays(1, vbo_);
-  }
-
-  static
-  int WindowWidth() {
-    return windowWidth_;
-  }
-  static
-  int WindowHeight() {
-    return windowHeight_;
-  }
-  
- protected:
-  static
-  void OnGlfwWindowSizeCallback_(GLFWwindow *window, int width, int height) {
-    DEBUG("%s: window resized: width=%i height=%i\n", __FUNCTION__, width, height);
-    glfwGetFramebufferSize(window, &width, &height);
-    auto const dim = std::min(width, height);
-    DEBUG("%s: glfwGetFramebufferSize called: width=%i height=%i\n", __FUNCTION__, width, height);
-    windowWidth_ = dim;
-    windowHeight_ = dim;
-    // TODO: update any perspective matrices used here
-  }
-  
-  static
-  void OnGlfwErrorCallback_(int error, char const *description) {
-    ERROR("GLFW: code %i msg: %s\n", error, description);
-  }
-  
-  GLFWwindow *window_;
-  GLuint vbo_[1];
-  GLuint vao_[1];
-  GLuint shaderProgramme_;
-  bool glfwInitialized_ = false;
-  GLuint size_;
-
-  static int windowWidth_;
-  static int windowHeight_;
-};
-
-int Graphics::windowWidth_ = 540;
-int Graphics::windowHeight_ = 540;
+using astro::Graphics;
 
 void PrintGraphicsInfo() {
   GLubyte const *renderer = glGetString(GL_RENDERER); // get renderer string
   GLubyte const *version = glGetString(GL_VERSION); // version as a string
-  printf("Renderer: %s\n", renderer);
-  printf("OpenGL version supported %s\n", version);
+  INFO("Renderer: %s\n", renderer);
+  INFO("OpenGL version supported: %s\n", version);
 
   GLfloat sizes[2];  // stores supported point size range
   GLfloat step;      // stores supported point size increments
   glGetFloatv(GL_POINT_SIZE_RANGE, sizes);
   glGetFloatv(GL_POINT_SIZE_GRANULARITY, &step);
-  printf("Supported point size range: %f ... %f\n", sizes[0], sizes[1]);
-  printf("Supported point size increments: %f\n", step);
-  
+  INFO("Supported point size range: %f ... %f\n", sizes[0], sizes[1]);
+  INFO("Supported point size increments: %f\n", step);
+
   GLenum params[] = {
     GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
     GL_MAX_CUBE_MAP_TEXTURE_SIZE,
@@ -251,16 +64,16 @@ void PrintGraphicsInfo() {
   for (int i = 0; i < 10; i++) {
     int v = 0;
     glGetIntegerv(params[i], &v);
-    INFO("%s %i\n", names[i], v);
+    INFO("%s: %i\n", names[i], v);
   }
   // others
   int v[2];
   v[0] = v[1] = 0;
   glGetIntegerv(params[10], v);
-  INFO("%s %i %i\n", names[10], v[0], v[1]);
+  INFO("%s: %i %i\n", names[10], v[0], v[1]);
   unsigned char s = 0;
   glGetBooleanv(params[11], &s);
-  INFO("%s %u\n", names[11], (unsigned int)s);
+  INFO("%s: %u\n", names[11], (unsigned int)s);
   INFO("-----------------------------\n");
 }
 
@@ -289,7 +102,7 @@ struct Starsky {
     std::cerr << "GMST: " << astro::FormatHMS(gmst * astro::kDeg) << '\n';
     std::cerr << '\n';
   }
-  
+
   void LoadStars(std::istream &is) {
     PPMXLReader reader(is);
     PPMXLReader::Row data;
@@ -311,7 +124,7 @@ struct Starsky {
   void ToggleExtra() {
     showExtra_ = !showExtra_;
   }
-  
+
   void VertexizeStars() {
     Reset();
 
@@ -324,7 +137,7 @@ struct Starsky {
                                   tm.tm_hour, tm.tm_min, secs);
     double const gmst = astro::GMST(mjd) + positionLongitude_;
 
-    for (auto const &data : entries_) {      
+    for (auto const &data : entries_) {
       // Filter out stars invisible for naked eye.
       // if (data.Jmag <= 0.0 || data.Jmag >= 2.5)
       //   continue;
@@ -334,9 +147,9 @@ struct Starsky {
       delta = data.DecJ2000 * astro::kRad;
       // DEBUG("data: ipix=%llu, ra=%lf (%lf), delta=%lf (%lf)\n",
       //       data.Ipix, data.RaJ2000, ra, data.DecJ2000, delta);
-    
+
       ProcessStar(gmst - ra, delta, data.Jmag / (2.5 / 10.0) + 5.0);
-      
+
       // double const tau = gmst - ra;
 
       // std::cerr << "Star #" << data.Ipix << '\n';
@@ -400,7 +213,7 @@ struct Starsky {
       ProcessStar(az, elev, 75);
     }
   }
-  
+
   void ProcessStar(double ha, double decl, double mag) {
     // double az, elev;
     // astro::Equ2Hor(decl, ha, positionLatitude_, elev, az);
@@ -409,7 +222,7 @@ struct Starsky {
 
     DrawStar(ha, decl, mag);
   }
-  
+
   void DrawStar(double az, double elev, double mag) {
     float x = std::sin(az) * std::cos(elev);
     float y = std::sin(elev);
@@ -430,22 +243,19 @@ struct Starsky {
     //   return;
 
     // float d = x*x + y*y + z*z;
-    
+
     // DEBUG("vertexing a star: x=% .08f, y=% .08f, z=% .08f, mag=%2i, d=%f\n", x, y, z, mag, d);
 
-    Vertex v{x, y, z, float{mag/3.15}};
-    stars_.push_back(v);
+    Graphics::Star v{x, y, z, float(double(mag/3.15))};
+    stars_.emplace_back(v);
   }
 
   void Reset() {
     stars_.clear();
   }
 
-  GLfloat * Data() {
-    return reinterpret_cast<GLfloat *>(stars_.data());
-  }
-  GLuint Size() const {
-    return GLuint{stars_.size()};
+  std::vector<Graphics::Star> const & Stars() const {
+    return stars_;
   }
 
  protected:
@@ -460,80 +270,72 @@ struct Starsky {
   double viewAngleX_ = 0.0;
   double viewAngleY_ = 0.0;
 
-  std::vector<Vertex> stars_;
+  std::vector<Graphics::Star> stars_;
   std::vector<PPMXLReader::Row> entries_;
 };
 
-struct GraphicsProgram : public Graphics {
-  void Run(Starsky &sky) {    
-    auto const timeBeginning = chrono::steady_clock::now();
+struct GraphicsProgram: public Graphics {
+  GraphicsProgram()
+      : Graphics() {
+    Graphics::windowWidth_ = 520;
+    Graphics::windowHeight_ = 520;
+
+    timeBeginning_ = chrono::steady_clock::now();
+  }
+
+  void Render() override {
     double const timeScale = 600.0;
-    while (!glfwWindowShouldClose(window_)) {
-      chrono::steady_clock::time_point now = chrono::steady_clock::now();
-      now += chrono::duration_cast<chrono::nanoseconds>((now - timeBeginning) * timeScale);
 
-      glViewport(0, 0, WindowWidth(), WindowHeight());
+    chrono::steady_clock::time_point now = chrono::steady_clock::now();
+    now += chrono::duration_cast<chrono::nanoseconds>((now - timeBeginning_) * timeScale);
 
-      // Wipe the drawing surface clear.
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    sky_->SetTime(now);
+    sky_->SetRotation(viewAngleX_, viewAngleY_);
+    sky_->VertexizeStars();
 
-      sky.SetTime(now);
-      sky.SetRotation(viewAngleX_, viewAngleY_);
-      sky.VertexizeStars();
-      LoadPoints(sky.Data(), sky.Size());
+    LoadStars(sky_->Stars());
 
-      glUseProgram(shaderProgramme_);
-      glBindVertexArray(vao_[0]);
+    RenderStars();
+  }
 
-      // GLfloat attribColor[] = {
-      //   std::sin(0.0000 + double{now} * 0.0001),
-      //   std::cos(0.0005 + double{now} * 0.0002),
-      //   std::cos(0.0010 + double{now} * 0.0003),
-      //   1.0
-      // };
-      // glVertexAttrib4fv(1, attribColor);
-
-      // Draw points 0-3 from the currently bound VAO with current in-use shader.
-      // glPointSize(2.5f);
-      glDrawArrays(GL_POINTS, 0, size_);
-
-      // Update other events like input handling.
-      glfwPollEvents();
-
-      // Put the stuff we've been drawing onto the display.
-      glfwSwapBuffers(window_);
-
-      double const rotationStep = astro::kPi / 12.0 / 60.0;
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_ESCAPE) || GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Q)) {
-        glfwSetWindowShouldClose(window_, 1);
-      }
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_LEFT)) {
-        viewAngleY_ +=  rotationStep;
-      }
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_RIGHT)) {
-        viewAngleY_ += -rotationStep;
-      }
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_UP)) {
-        viewAngleX_ += -rotationStep;
-      }
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_DOWN)) {
-        viewAngleX_ +=  rotationStep;
-      }
-      viewAngleX_ = std::remainder(viewAngleX_, astro::kPi2);
-      viewAngleY_ = std::remainder(viewAngleY_, astro::kPi2);
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Z)) {
-        viewAngleX_ = -0;//astro::kPi/2.0;
-        viewAngleY_ =  0;//astro::kPi;
-      }
-      if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_X)) {
-        sky.ToggleExtra();
-      }
+  void HandleInput() override {
+    double const rotationStep = astro::kPi / 12.0 / 60.0;
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_ESCAPE) || GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Q)) {
+      glfwSetWindowShouldClose(window_, 1);
     }
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_LEFT)) {
+      viewAngleY_ +=  rotationStep;
+    }
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_RIGHT)) {
+      viewAngleY_ += -rotationStep;
+    }
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_UP)) {
+      viewAngleX_ += -rotationStep;
+    }
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_DOWN)) {
+      viewAngleX_ +=  rotationStep;
+    }
+    viewAngleX_ = std::remainder(viewAngleX_, astro::kPi2);
+    viewAngleY_ = std::remainder(viewAngleY_, astro::kPi2);
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Z)) {
+      viewAngleX_ = -0;//astro::kPi/2.0;
+      viewAngleY_ =  0;//astro::kPi;
+    }
+    if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_X)) {
+      sky_->ToggleExtra();
+    }
+  }
+
+  void SetSky(Starsky *sky) {
+    sky_ = sky;
   }
 
  private:
   double viewAngleX_ = -(90.0 - 53.319927) * astro::kRad; // astro::kPi/2.0;
   double viewAngleY_ =  0; // astro::kPi;
+
+  Starsky *sky_;
+  chrono::steady_clock::time_point timeBeginning_;
 };
 
 int main() {
@@ -546,12 +348,14 @@ int main() {
     graphics.Init();
     PrintGraphicsInfo();
 
-    auto sky = std::make_unique<Starsky>();
+    gsl::owner<Starsky *> sky = new Starsky{};
     sky->Init();
     sky->LoadStars(std::cin);
 
+    graphics.SetSky(sky);
+
     graphics.LoadShaders();
-    graphics.Run(*sky);
+    graphics.Loop();
     graphics.Deinit();
   } catch (std::exception const &ex) {
     fprintf(stderr, "ERROR: %s\n", ex.what());

@@ -108,7 +108,8 @@ toolchain {
   compilation_mode_flags {
     mode: DBG
     # Enable debug symbols.
-    compiler_flag: "-g -ggdb"
+    compiler_flag: "-g"
+    compiler_flag: "-ggdb"
   }
   compilation_mode_flags {
     mode: OPT
