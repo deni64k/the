@@ -13,9 +13,9 @@
 #ifdef DEBUG
 # undef DEBUG
 #endif
-#define DEBUG(...) if (false) astro::streams::Null
+#define DEBUG(...) if (false) the::streams::Null
 
-namespace astro::ui {
+namespace the::ui {
 
 static std::map<FT_ULong, FT_GlyphSlot> Glyphs;
 

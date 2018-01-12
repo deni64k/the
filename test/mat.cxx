@@ -2,7 +2,7 @@
 #include "lib/consts.hxx"
 #include "lib/mat.hxx"
 
-using namespace astro;
+using namespace the;
 
 TEST(MatrixTest, Instantiates) {
   Mat3 m{

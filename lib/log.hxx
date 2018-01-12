@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace astro {
+namespace the {
 
 namespace streams {
 extern std::ofstream Null;

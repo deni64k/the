@@ -1,7 +1,7 @@
 #include "consts.hxx"
 #include "precnut.hxx"
 
-namespace astro {
+namespace the {
 
 // XXX: https://syrte.obspm.fr/iau2006/aa03_412_P03.pdf
 // XXX: https://en.wikipedia.org/wiki/Axial_precession

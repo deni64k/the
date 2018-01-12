@@ -4,7 +4,7 @@
 
 #include "mat.hxx"
 
-namespace astro {
+namespace the {
 
 double EclipticObliquity(double const T);
 

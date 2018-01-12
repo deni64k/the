@@ -44,10 +44,10 @@ char const * GlErrorToString(GLenum err) {
     std::stringstream ss;                                               \
     ss << __func__ << ':' << __LINE__ << ": glGetError=" << err         \
        << ": " << GlErrorToString(err) << '\n';                         \
-    astro::Panic(ss.str());                                             \
+    the::Panic(ss.str());                                               \
   }
 
-namespace astro::ui {
+namespace the::ui {
 
 struct Graphics {
   struct [[gnu::packed]] Star {

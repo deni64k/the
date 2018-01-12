@@ -1,6 +1,6 @@
 #include "lib/ui/graphics.hxx"
 
-namespace astro::ui {
+namespace the::ui {
 
 int Graphics::windowWidth_;
 int Graphics::windowHeight_;

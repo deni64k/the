@@ -4,7 +4,7 @@
 #include "lib/ui/impl/errors.hxx"
 #include "lib/utils.hxx"
 
-namespace astro::ui {
+namespace the::ui {
 
 namespace {
 Fallible<GLuint> CompileShader(GLenum shaderType, GLchar const *shaderSource) {

@@ -5,7 +5,7 @@
 #include "log.hxx"
 #include "utils.hxx"
 
-namespace astro {
+namespace the {
 
 std::string LoadFile(char const *fpath) {
   std::string s;

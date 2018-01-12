@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "lib/time.hxx"
 
-using namespace astro;
+using namespace the;
 
 TEST(CalendarTest, CalculatesMJD) {
   ASSERT_DOUBLE_EQ(    0, MJD(1858, 11, 17, 0, 0, 0.0));

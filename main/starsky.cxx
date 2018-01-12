@@ -21,8 +21,8 @@
 
 namespace chrono = std::chrono;
 
-using astro::ui::Graphics;
-using astro::Fallible;
+using the::ui::Graphics;
+using the::Fallible;
 
 void PrintGraphicsInfo() {
   INFO() << "Using GLEW "      << glewGetString(GLEW_VERSION) << '\n';
@@ -85,7 +85,7 @@ void PrintGraphicsInfo() {
   (void)glGetError();  // reset error status
 }
 
-using astro::PPMXLReader;
+using the::PPMXLReader;
 
 struct Starsky {
   Starsky()
@@ -99,16 +99,16 @@ struct Starsky {
     using milliseconds_type = std::chrono::duration<double, std::chrono::milliseconds::period>;
     auto secs = tm.tm_sec + chrono::duration_cast<milliseconds_type>(time_.time_since_epoch()).count();
     secs = std::fmod(secs, 1.0);
-    double mjd = astro::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
-                            tm.tm_hour, tm.tm_min, secs);
-    double gmst = astro::GMST(mjd) + positionLongitude_;
+    double mjd = the::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
+                          tm.tm_hour, tm.tm_min, secs);
+    double gmst = the::GMST(mjd) + positionLongitude_;
 
     INFO() << "Initialize with these parameters\n";
-    INFO() << "Latitude: " << astro::FormatDMS(positionLatitude_ * astro::kDeg) << '\n';
-    INFO() << "Altitude: " << astro::FormatDMS(positionLongitude_ * astro::kDeg) << '\n';
+    INFO() << "Latitude: " << the::FormatDMS(positionLatitude_ * the::kDeg) << '\n';
+    INFO() << "Altitude: " << the::FormatDMS(positionLongitude_ * the::kDeg) << '\n';
     INFO() << "Time: " << std::put_time(&tm, "%c %Z") << '\n';
     INFO() << "MJD: " << mjd << '\n';
-    INFO() << "GMST: " << astro::FormatHMS(gmst * astro::kDeg) << '\n';
+    INFO() << "GMST: " << the::FormatHMS(gmst * the::kDeg) << '\n';
     INFO() << "-----------------------------\n";
   }
 
@@ -142,9 +142,9 @@ struct Starsky {
     using milliseconds_type = std::chrono::duration<double, std::chrono::milliseconds::period>;
     auto secs = tm.tm_sec + chrono::duration_cast<milliseconds_type>(time_.time_since_epoch()).count();
     secs = std::fmod(secs, 1.0);
-    double const mjd = astro::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
-                                  tm.tm_hour, tm.tm_min, secs);
-    double const gmst = astro::GMST(mjd) + positionLongitude_;
+    double const mjd = the::MJD(tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday,
+                                tm.tm_hour, tm.tm_min, secs);
+    double const gmst = the::GMST(mjd) + positionLongitude_;
 
     for (auto const &data : entries_) {
       // Filter out stars invisible for naked eye.
@@ -152,8 +152,8 @@ struct Starsky {
       //   continue;
 
       double ra, delta;
-      ra    = data.RaJ2000 * astro::kRad;
-      delta = data.DecJ2000 * astro::kRad;
+      ra    = data.RaJ2000 * the::kRad;
+      delta = data.DecJ2000 * the::kRad;
       // DEBUG("data: ipix=%llu, ra=%lf (%lf), delta=%lf (%lf)\n",
       //       data.Ipix, data.RaJ2000, ra, data.DecJ2000, delta);
 
@@ -162,14 +162,14 @@ struct Starsky {
       // double const tau = gmst - ra;
 
       // std::cerr << "Star #" << data.Ipix << '\n';
-      // std::cerr << "RA:       " << astro::FormatHMS(ra * astro::kDeg) << '\t';
-      // std::cerr << "Delta:    " << astro::FormatDMS(delta * astro::kDeg) << '\n';
+      // std::cerr << "RA:       " << the::FormatHMS(ra * the::kDeg) << '\t';
+      // std::cerr << "Delta:    " << the::FormatDMS(delta * the::kDeg) << '\n';
 
       // double az, elev;
-      // astro::Equ2Hor(delta, tau, positionLatitude_, elev, az);
+      // the::Equ2Hor(delta, tau, positionLatitude_, elev, az);
 
-      // std::cerr << "Azimuth:  " << astro::FormatDMS(az * astro::kDeg) << '\t';
-      // std::cerr << "Altitude: " << astro::FormatDMS(elev * astro::kDeg) << '\n';
+      // std::cerr << "Azimuth:  " << the::FormatDMS(az * the::kDeg) << '\t';
+      // std::cerr << "Altitude: " << the::FormatDMS(elev * the::kDeg) << '\n';
       // std::cerr << '\n';
 
       // int x = std::cos(elev) * std::cos(az) * Graphics::WindowWidth()/2;
@@ -183,41 +183,41 @@ struct Starsky {
       return;
 
     // North and South poles.
-    ProcessStar(gmst,  astro::kPi/2.0, 40);
-    // ProcessStar(0.0, -astro::kPi/2.0, gmst, 40);
+    ProcessStar(gmst,  the::kPi/2.0, 40);
+    // ProcessStar(0.0, -the::kPi/2.0, gmst, 40);
 
     // Deneb
     // ProcessStar(310.357978889, 45.2803369444, 5);
 
     // Orion's Belt
-    // ProcessStar(astro::FromDMS(5, 32,  0.40009) * 15.0, astro::FromDMS( 0, -17, 56.7424));
-    // ProcessStar(astro::FromDMS(5, 36, 12.8)     * 15.0, astro::FromDMS(-1,  12,  6.9), 5);
-    // ProcessStar(astro::FromDMS(5, 40, 45.52666) * 15.0, astro::FromDMS(-1,  56, 34.2649));
+    // ProcessStar(the::FromDMS(5, 32,  0.40009) * 15.0, the::FromDMS( 0, -17, 56.7424));
+    // ProcessStar(the::FromDMS(5, 36, 12.8)     * 15.0, the::FromDMS(-1,  12,  6.9), 5);
+    // ProcessStar(the::FromDMS(5, 40, 45.52666) * 15.0, the::FromDMS(-1,  56, 34.2649));
 
     // Cassiopeiea
-    ProcessStar(gmst - astro::FromDMS(0, 40, 30.4405)  * 15.0 * astro::kRad, astro::FromDMS(56, 32, 14.3920) * astro::kRad, 30);
-    ProcessStar(gmst - astro::FromDMS(0,  9, 10.68518) * 15.0 * astro::kRad, astro::FromDMS(59,  8, 59.2120) * astro::kRad, 30);
-    ProcessStar(gmst - astro::FromDMS(0, 56, 42.50108) * 15.0 * astro::kRad, astro::FromDMS(60, 43,  0.2984) * astro::kRad, 30);
-    ProcessStar(gmst - astro::FromDMS(1, 25, 48.95147) * 15.0 * astro::kRad, astro::FromDMS(60, 14,  7.0225) * astro::kRad, 30);
-    ProcessStar(gmst - astro::FromDMS(1, 54, 23.72567) * 15.0 * astro::kRad, astro::FromDMS(63, 40, 12.3628) * astro::kRad, 30);
+    ProcessStar(gmst - the::FromDMS(0, 40, 30.4405)  * 15.0 * the::kRad, the::FromDMS(56, 32, 14.3920) * the::kRad, 30);
+    ProcessStar(gmst - the::FromDMS(0,  9, 10.68518) * 15.0 * the::kRad, the::FromDMS(59,  8, 59.2120) * the::kRad, 30);
+    ProcessStar(gmst - the::FromDMS(0, 56, 42.50108) * 15.0 * the::kRad, the::FromDMS(60, 43,  0.2984) * the::kRad, 30);
+    ProcessStar(gmst - the::FromDMS(1, 25, 48.95147) * 15.0 * the::kRad, the::FromDMS(60, 14,  7.0225) * the::kRad, 30);
+    ProcessStar(gmst - the::FromDMS(1, 54, 23.72567) * 15.0 * the::kRad, the::FromDMS(63, 40, 12.3628) * the::kRad, 30);
 
     // Sun
     {
-      double epoch = (mjd - astro::kMJD_J2000) / 36525.0;
-      auto vec = astro::SunPos(epoch);
+      double epoch = (mjd - the::kMJD_J2000) / 36525.0;
+      auto vec = the::SunPos(epoch);
       // std::cerr << "ecl sun = " << vec << '\n';
-      vec = astro::Ecl2EquMatrix(epoch) * vec;
+      vec = the::Ecl2EquMatrix(epoch) * vec;
       // std::cerr << "equ sun = " << vec << '\n';
       // The z axis is directed towards to the north celestial polar.
       // To align with the model axis it has to be rotated relatively x on 90 degrees.
-      // vec = astro::Mat3::RotateX(-astro::kPi/2.0) * vec;
+      // vec = the::Mat3::RotateX(-the::kPi/2.0) * vec;
       // The y axis has got to be reversed direction.
       // vec[2] = -vec[2];
-      auto sun = astro::MakePolar(vec);
+      auto sun = the::MakePolar(vec);
       // std::cerr << "polar sun = " << vec << '\n';
       // ProcessStar(sun.Phi, sun.Theta, 75);
       double elev, az;
-      astro::Equ2Hor(sun.Theta, gmst - sun.Phi, positionLatitude_, elev, az);
+      the::Equ2Hor(sun.Theta, gmst - sun.Phi, positionLatitude_, elev, az);
       // std::cerr << "elev = " << elev << "; az = " << az << '\n';
       ProcessStar(az, elev, 75);
     }
@@ -225,7 +225,7 @@ struct Starsky {
 
   void ProcessStar(double ha, double decl, double mag) {
     // double az, elev;
-    // astro::Equ2Hor(decl, ha, positionLatitude_, elev, az);
+    // the::Equ2Hor(decl, ha, positionLatitude_, elev, az);
 
     // DrawStar(az, elev, mag);
 
@@ -241,9 +241,9 @@ struct Starsky {
     // float y = std::sin(decl);
     // float z = std::cos(ra) * std::cos(decl);
 
-    auto vec = astro::Vec3{x, y, z};
-    vec = astro::Mat3::RotateX(viewAngleX_) * vec;
-    vec = astro::Mat3::RotateY(viewAngleY_) * vec;
+    auto vec = the::Vec3{x, y, z};
+    vec = the::Mat3::RotateX(viewAngleX_) * vec;
+    vec = the::Mat3::RotateY(viewAngleY_) * vec;
     x = vec[0];
     y = vec[1];
     z = vec[2];
@@ -269,8 +269,8 @@ struct Starsky {
 
  protected:
   // Dublin's home.
-  double const positionLatitude_  = 53.319927 * astro::kRad;
-  double const positionLongitude_ = -6.264353 * astro::kRad;
+  double const positionLatitude_  = 53.319927 * the::kRad;
+  double const positionLongitude_ = -6.264353 * the::kRad;
 
   // TODO: Switch to real clock and increment gradually with timeFactor.
   chrono::system_clock::time_point time_;
@@ -341,9 +341,9 @@ struct GraphicsProgram: public Graphics {
            << " time: " << std::put_time(&tm, "%c %Z")
            << std::fixed << std::showpoint << std::setprecision(3)
            << " rot (x, y): "
-           << '(' << viewAngleX_ / astro::kRad << ", " << viewAngleY_ / astro::kRad << ')';
+           << '(' << viewAngleX_ / the::kRad << ", " << viewAngleY_ / the::kRad << ')';
         auto const str = ss.str();
-        auto image = astro::ui::RenderFont({str.c_str(), str.size()});
+        auto image = the::ui::RenderFont({str.c_str(), str.size()});
         if (!image) {
           ERROR() << "failed to render the text " << std::quoted(str) << ": " << image.Err();
           return image;
@@ -363,7 +363,7 @@ struct GraphicsProgram: public Graphics {
   }
 
   void HandleInput() override {
-    double const rotationStep = astro::kPi / 12.0 / 60.0;
+    double const rotationStep = the::kPi / 12.0 / 60.0;
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_ESCAPE) || GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Q)) {
       glfwSetWindowShouldClose(window_, 1);
     }
@@ -379,11 +379,11 @@ struct GraphicsProgram: public Graphics {
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_DOWN)) {
       viewAngleX_ +=  rotationStep;
     }
-    viewAngleX_ = std::remainder(viewAngleX_, astro::kPi2);
-    viewAngleY_ = std::remainder(viewAngleY_, astro::kPi2);
+    viewAngleX_ = std::remainder(viewAngleX_, the::kPi2);
+    viewAngleY_ = std::remainder(viewAngleY_, the::kPi2);
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Z)) {
-      viewAngleX_ = -0;//astro::kPi/2.0;
-      viewAngleY_ =  0;//astro::kPi;
+      viewAngleX_ = -0;//the::kPi/2.0;
+      viewAngleY_ =  0;//the::kPi;
     }
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_X)) {
       sky_->ToggleExtra();
@@ -406,16 +406,16 @@ struct GraphicsProgram: public Graphics {
   }
 
  private:
-  // double viewAngleX_ = -(90.0 - 53.319927) * astro::kRad; // astro::kPi/2.0;
-  double viewAngleX_ = (90.0) * astro::kRad; // astro::kPi/2.0;
-  double viewAngleY_ =  0; // astro::kPi;
+  // double viewAngleX_ = -(90.0 - 53.319927) * the::kRad; // the::kPi/2.0;
+  double viewAngleX_ = (90.0) * the::kRad; // the::kPi/2.0;
+  double viewAngleY_ =  0; // the::kPi;
 
   Starsky *sky_;
   chrono::system_clock::time_point timeIn_;
   chrono::steady_clock::time_point timeBeginning_;
 
   struct {
-    astro::ui::Shader shader;
+    the::ui::Shader shader;
     GLuint textureID;
     GLuint vVertex;
     GLuint textureMap;
@@ -429,8 +429,8 @@ Fallible<> GraphicsProgram::LoadShaders() {
   if (auto rv = this->Graphics::LoadShaders(); !rv)
     return rv;
     
-  auto vertexShader   = astro::LoadFile("lib/shaders/text.vert.glsl");
-  auto fragmentShader = astro::LoadFile("lib/shaders/text.frag.glsl");
+  auto vertexShader   = the::LoadFile("lib/shaders/text.vert.glsl");
+  auto fragmentShader = the::LoadFile("lib/shaders/text.frag.glsl");
 
   if (auto rv = textPipeline_.shader.CompileVertex(vertexShader.c_str()); !rv)
     return rv;
@@ -482,7 +482,7 @@ Fallible<> GraphicsProgram::LoadShaders() {
   FALL_ON_GL_ERROR();
 
   char const str[] = "The Universe"; //"WAVAW 春の曲";
-  auto image = astro::ui::RenderFont({str, sizeof(str) - 1});
+  auto image = the::ui::RenderFont({str, sizeof(str) - 1});
   if (!image) {
     ERROR() << "failed to render the text " << std::quoted(str) << ": " << image.Err();
   }
@@ -523,7 +523,7 @@ int main() {
 
 
   if (auto rv = graphics.LoadShaders(); !rv)
-    astro::Panic(rv.Err().What());
+    the::Panic(rv.Err().What());
 
   graphics.Loop();
   graphics.Deinit();

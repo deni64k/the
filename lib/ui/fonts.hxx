@@ -8,7 +8,7 @@
 
 #include "lib/utils.hxx"
 
-namespace astro::ui {
+namespace the::ui {
 
 template <typename T>
 struct Image {

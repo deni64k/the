@@ -2,7 +2,7 @@
 
 #include "lib/utils.hxx"
 
-namespace astro::ui {
+namespace the::ui {
 
 struct OpenGlError: public Error {
   using Error::Error;

@@ -4,7 +4,7 @@
 #include "time.hxx"
 #include "spheric.hxx"
 
-namespace astro {
+namespace the {
 
 double EclipticObliquity(double const T) {
   // Astronomical Almanac 2010, p. B52.

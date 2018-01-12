@@ -8,7 +8,7 @@
 #include "common.hxx"
 #include "vec.hxx"
 
-namespace astro {
+namespace the {
 
 template <int Rows, int Cols, typename T = double>
 struct Mat final: std::array<std::array<T, Cols>, Rows> {

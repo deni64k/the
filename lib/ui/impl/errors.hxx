@@ -8,7 +8,7 @@
 #include "lib/utils.hxx"
 #include "lib/ui/errors.hxx"
 
-namespace astro::ui::impl {
+namespace the::ui::impl {
 
 extern char const * GlErrorToString(GLenum err) noexcept;
 
@@ -19,7 +19,7 @@ extern char const * GlErrorToString(GLenum err) noexcept;
     std::stringstream ss;                                               \
     ss << __func__ << ':' << __LINE__                                   \
        << ": glGetError=" << err                                        \
-       << ": " << ::astro::ui::impl::GlErrorToString(err);              \
+       << ": " << ::the::ui::impl::GlErrorToString(err);                \
     if constexpr (std::tuple_size<decltype(                             \
         std::make_tuple(__VA_ARGS__))>::value > 0) {                    \
       std::apply([&ss](auto ...x) {                                     \
@@ -28,5 +28,5 @@ extern char const * GlErrorToString(GLenum err) noexcept;
         std::make_tuple(__VA_ARGS__)                                    \
       );                                                                \
     }                                                                   \
-    return {::astro::ui::OpenGlError{ss.str()}};                        \
+    return {::the::ui::OpenGlError{ss.str()}};                          \
   }

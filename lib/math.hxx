@@ -3,7 +3,7 @@
 #include <cmath>
 #include <string>
 
-namespace astro {
+namespace the {
 
 inline
 double FromDMS(int d, int m, double s) {

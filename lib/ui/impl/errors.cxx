@@ -1,6 +1,6 @@
 #include "lib/ui/impl/errors.hxx"
 
-namespace astro::ui::impl {
+namespace the::ui::impl {
 
 char const * GlErrorToString(GLenum err) noexcept {
   switch (err) {

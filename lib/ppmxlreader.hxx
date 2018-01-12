@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <istream>
 
-namespace astro {
+namespace the {
 
 /// Implements a reader of PPMXL catalogue.
 /// The catalogue contains 910468688 records.

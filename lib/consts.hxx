@@ -1,6 +1,6 @@
 #pragma once
 
-namespace astro {
+namespace the {
 namespace {
 
 // The IAU 2009 System of Astronomical Constants

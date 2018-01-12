@@ -13,7 +13,7 @@
 // #undef try
 // #undef catch
 
-namespace astro {
+namespace the {
 
 std::string LoadFile(char const *fpath);
 

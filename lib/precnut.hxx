@@ -2,7 +2,7 @@
 
 #include "mat.hxx"
 
-namespace astro {
+namespace the {
 
 /// Returns a precession transformation matrix of ecliptic coordinates.
 /// @param T0 Epoch given

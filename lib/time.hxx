@@ -5,7 +5,7 @@
 #include "consts.hxx"
 #include "math.hxx"
 
-namespace astro {
+namespace the {
 
 inline
 double MJD(int year, int month, int day,

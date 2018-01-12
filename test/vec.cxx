@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "lib/vec.hxx"
 
-using namespace astro;
+using namespace the;
 
 TEST(VectorTest, Instantiates) {
   Vec3 v{1.0, 2.0, 3.0};

@@ -5,7 +5,7 @@
 #include "lib/sun.hxx"
 #include "lib/precnut.hxx"
 
-using namespace astro;
+using namespace the;
 
 TEST(CoordinateTransformationTest, EquinoxComputesCorrectly) {
   Vec3 v0{1.0, 0.0, 0.0}, v1, v2;

@@ -2,7 +2,7 @@
 
 #include "vec.hxx"
 
-namespace astro {
+namespace the {
 
 /// Computes the Sun's ecliptical position using analytical series.
 /// @param T Time in Julian centuries since J2000

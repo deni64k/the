@@ -4,7 +4,7 @@
 #include <cmath>
 #include <ostream>
 
-namespace astro {
+namespace the {
 
 template <int Size, typename T>
 struct Vec final: std::array<T, Size> {

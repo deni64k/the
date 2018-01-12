@@ -6,7 +6,7 @@
 
 #include "lib/utils.hxx"
 
-namespace astro::ui {
+namespace the::ui {
 
 struct Shader final {
   Shader();

@@ -3,7 +3,7 @@
 #include <cstdarg>
 #include <cstdio>
 
-namespace astro {
+namespace the {
 
 std::ofstream streams::Null("/dev/null");
 

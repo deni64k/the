@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "lib/math.hxx"
 
-using namespace astro;
+using namespace the;
 
 TEST(AngleTest, CalculatesFromDMS) {
   ASSERT_DOUBLE_EQ(  0.0,               FromDMS(0, 0, 0.0));

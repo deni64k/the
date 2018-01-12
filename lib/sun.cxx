@@ -5,7 +5,7 @@
 #include "sun.hxx"
 #include "vec.hxx"
 
-namespace astro {
+namespace the {
 
 // XXX: I have to copy perturbation calculations as is until I figure out how it works.
 namespace // Unnamed namespace
