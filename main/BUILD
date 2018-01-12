@@ -1,7 +1,7 @@
 cc_binary(
     name = "coco",
     srcs = glob([
-         "coco.cxx",
+        "coco.cxx",
     ]),
     deps = [
         "//lib:libastrolabe",
@@ -11,7 +11,7 @@ cc_binary(
 cc_binary(
     name = "star",
     srcs = glob([
-         "star.cxx",
+        "star.cxx",
     ]),
     copts = ["-fextended-identifiers"],
     deps = [
@@ -22,9 +22,11 @@ cc_binary(
 cc_binary(
     name = "starsky",
     srcs = glob([
-         "starsky.cxx",
+        "starsky.cxx",
     ]),
-    # copts = ["-fno-exceptions"],
+    copts = [
+        "-fno-exceptions",
+    ],
     linkopts = select({
         ":darwin": [
             "-framework OpenGL",
@@ -39,10 +41,12 @@ cc_binary(
             "-lglew",
         ],
         ":windows_msvc": [
+            # XXX: ???
         ],
     }),
     deps = [
         "//lib:libastrolabe",
+        "@freetype//:libfreetype",
     ],
 )
 

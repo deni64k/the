@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "consts.hxx"
 #include "math.hxx"
 
 namespace astro {

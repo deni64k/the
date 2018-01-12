@@ -16,3 +16,11 @@ new_http_archive(
     # strip_prefix = "GSL-2b8d20425e990c5a3e9a0158e2cedacbcdf9e522",
     strip_prefix = "gsl-lite-0.24.0",
 )
+
+new_http_archive(
+    name = "freetype",
+    url = "https://download.savannah.gnu.org/releases/freetype/freetype-2.8.1.tar.bz2",
+    sha256 = "e5435f02e02d2b87bb8e4efdcaa14b1f78c9cf3ab1ed80f94b6382fb6acc7d78",
+    build_file = "freetype.BUILD",
+    strip_prefix = "freetype-2.8.1",
+)

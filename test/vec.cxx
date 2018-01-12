@@ -15,9 +15,9 @@ TEST(VectorTest, Instantiates) {
   ASSERT_DOUBLE_EQ(0.0, xyz[2]);
 
   auto polar = MakePolar(Vec3{1.0, 0.0, 0.0});
-  ASSERT_DOUBLE_EQ(0.0, polar.phi);
-  ASSERT_DOUBLE_EQ(0.0, polar.theta);
-  ASSERT_DOUBLE_EQ(1.0, polar.r);
+  ASSERT_DOUBLE_EQ(0.0, polar.Phi);
+  ASSERT_DOUBLE_EQ(0.0, polar.Theta);
+  ASSERT_DOUBLE_EQ(1.0, polar.R);
 }
 
 TEST(VectorTest, ArithmeticsWork) {

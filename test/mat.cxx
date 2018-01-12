@@ -183,17 +183,17 @@ TEST(MatrixTest, Transposes) {
 TEST(MatrixTest, Rotates) {
   Vec3 x{1.0, 1.0, 1.0}, y;
 
-  y = x * Mat3::RotateX(kPi);
+  y = Mat3::RotateX(kPi) * x;
   ASSERT_DOUBLE_EQ( 1.0, y[0]);
   ASSERT_DOUBLE_EQ(-1.0, y[1]);
   ASSERT_DOUBLE_EQ(-1.0, y[2]);
 
-  y = x * Mat3::RotateY(kPi);
+  y = Mat3::RotateY(kPi) * x;
   ASSERT_DOUBLE_EQ(-1.0, y[0]);
   ASSERT_DOUBLE_EQ( 1.0, y[1]);
   ASSERT_DOUBLE_EQ(-1.0, y[2]);
 
-  y = x * Mat3::RotateZ(kPi);
+  y = Mat3::RotateZ(kPi) * x;
   ASSERT_DOUBLE_EQ(-1.0, y[0]);
   ASSERT_DOUBLE_EQ(-1.0, y[1]);
   ASSERT_DOUBLE_EQ( 1.0, y[2]);

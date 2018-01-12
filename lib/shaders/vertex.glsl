@@ -1,5 +1,7 @@
 #version 400 core
 
+uniform mat4 modelToWorldMatrix = mat4(1.0);
+
 // layout (location = 0) in VS_IN {
 //   vec3 vp;
 //   float mag;
@@ -24,7 +26,35 @@ float starBrightness(in float m, in float lower, in float upper) {
 }
 
 void main() {
-  gl_Position = vec4(vp.x, vp.y, vp.z, 1.0);
+  // float fov = (60.0f / 2.0f) * 3.14f / 180.0f;
+  // float tanFov = tan(fov);
+  // float zNear = 0.1f;
+  // float zFar = 1000.0f;
+  // float zRange = zNear - zFar;
+  // float ratio = 1.0f;
+
+  // mat4 proj = mat4(
+  //     vec4(1.0f / (tanFov * ratio), 0.0f,          0.0f,                     0.0f),
+  //     vec4(0.0f,                    1.0f / tanFov, 0.0f,                     0.0f),
+  //     vec4(0.0f,                    0.0f,          (-zNear - zFar) / zRange, 2.0f * zFar * zNear / zRange),
+  //     vec4(0.0f,                    0.0f,          1.0f,                     0.0f)
+  // );
+             
+  // mat4 cam = mat4(
+  //     vec4(1.0f, 0.0f, 0.0f, 0.0f),
+  //     vec4(0.0f, 1.0f, 0.0f, 0.0f),
+  //     vec4(0.0f, 0.0f, 1.0f, 0.0f),
+  //     vec4(0.0f, 0.0f, 0.0f, 1.0f)
+  // );
+  // mat4 trans = mat4(
+  //     vec4(1.0f, 0.0f, 0.0f, -0.0f),
+  //     vec4(0.0f, 1.0f, 0.0f, -0.0f),
+  //     vec4(0.0f, 0.0f, 1.0f, -0.0f),
+  //     vec4(0.0f, 0.0f, 0.0f,  1.0f)
+  // );
+  // mat4 view = cam * trans;
+
+  gl_Position = modelToWorldMatrix * vec4(vp.x, vp.y, vp.z, 1.0);
   gl_PointSize = vp.w;//mag;
   // vs_out.color = color;
 }

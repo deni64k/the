@@ -1,20 +1,23 @@
 cc_library(
     name = "libastrolabe",
-    copts = [
-        "-Wdouble-promotion",
-        "-Iexternal/gsl/include",
-    ],
     srcs = glob([
-        "*.cxx",
+        "**/*.cxx",
     ]),
     hdrs = glob([
-        "*.hxx",
+        "**/*.hxx",
     ]),
+    copts = [
+        "-fno-exceptions",
+        "-Wdouble-promotion",
+        "-Iexternal/gsl/include",
+        "-Iexternal/freetype/include",
+    ],
     data = glob([
         "shaders/*.glsl",
     ]),
+    visibility = ["//visibility:public"],
     deps = [
         "@gsl//:main",
+        "@freetype//:libfreetype",
     ],
-    visibility = ["//visibility:public"],
 )

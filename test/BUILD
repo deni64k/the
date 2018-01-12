@@ -1,10 +1,10 @@
 cc_test(
     name = "main",
+    timeout = "short",
     srcs = glob(["*.cxx"]),
     copts = ["-Iexternal/gtest/include"],
     deps = [
-        "@gtest//:main",
         "//lib:libastrolabe",
+        "@gtest//:main",
     ],
-    timeout="short",
 )
