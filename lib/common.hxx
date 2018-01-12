@@ -1,3 +1,3 @@
 #pragma once
 
-#define ASTRO_INLINE inline
+#define INLINE inline

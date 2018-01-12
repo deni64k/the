@@ -43,7 +43,7 @@ char const * GlErrorToString(GLenum err) {
   if (auto const err = glGetError(); err != GL_NO_ERROR) {              \
     std::stringstream ss;                                               \
     ss << __func__ << ':' << __LINE__ << ": glGetError=" << err         \
-       << ": " << GlErrorToString(err) << '\n';                         \
+       << ": " << GlErrorToString(err);                                 \
     the::Panic(ss.str());                                               \
   }
 
@@ -63,57 +63,8 @@ struct Graphics {
     GLuint modelToWorldMatrix;
   };
 
-  virtual void Init() {
-    using namespace std::placeholders;
-
-    glfwSetErrorCallback(Graphics::OnGlfwErrorCallback_);
-
-    // start GL context and O/S window using the GLFW helper library
-    if (!glfwInit()) {
-      Panic(OpenGlError{"could not start GLFW3"});
-    }
-    glfwInitialized_ = true;
-
-#ifdef __APPLE__
-    // Get the newest available version of OpenGL on Apple,
-    // which will be 4.1 or 3.3 on Mavericks, and 3.2 on
-    // pre-Mavericks systems.
-    // On other systems it will tend to pick 3.2 instead of
-    // the newest version, which is unhelpful.
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#endif
-
-    glfwWindowHint(GLFW_SAMPLES, 4);
-
-    // GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    // GLFWvidmode const *vmode = glfwGetVideoMode(monitor);
-    // window_ = glfwCreateWindow(
-    //     vmode->width, vmode->height, "Stars sky", monitor, NULL);
-    window_ = glfwCreateWindow(
-        WindowWidth(), WindowHeight(), "Stars sky", nullptr, nullptr);
-    if (!window_) {
-      Panic(OpenGlError{"could not open window with GLFW3"});
-    }
-    glfwGetFramebufferSize(window_, &Graphics::windowWidth_, &Graphics::windowHeight_);
-    glfwSetWindowSizeCallback(window_, &Graphics::OnGlfwWindowSizeCallback_);
-    glfwMakeContextCurrent(window_);
-    PANIC_ON_GL_ERROR;
-
-    // start GLEW extension handler
-    glewExperimental = GL_TRUE;
-    glewInit();
-
-    // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    glEnable(GL_DEPTH_TEST); // enable depth-testing
-    PANIC_ON_GL_ERROR;
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    PANIC_ON_GL_ERROR;
-    glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
-    PANIC_ON_GL_ERROR;
-  }
+  virtual Fallible<> Init();
+  virtual Fallible<> Deinit();
 
   void LoadStars(gsl::span<Star const> const &stars) {
     size_ = stars.size();
@@ -147,11 +98,11 @@ struct Graphics {
   }
 
   static Mat<4, 4, GLfloat> ComputeCameraMatrix() {
-    float const fov = (60.0f / 2.0f) * static_cast<float>(kRad);
-    float const tanFov = std::tan(fov);
-    float const zNear = 0.1f;
-    float const zFar = 10.0f;
-    float const zRange = zNear - zFar;
+    static float const fov = (60.0f / 2.0f) * static_cast<float>(kRad);
+    static float const tanFov = std::tan(fov);
+    static float const zNear = 0.1f;
+    static float const zFar = 10.0f;
+    static float const zRange = zNear - zFar;
     float const ratio = windowWidth_ / windowHeight_;
 
     // Vec3 const position = {
@@ -193,75 +144,19 @@ struct Graphics {
 
   Fallible<> LoadShaders();
 
-  virtual void Deinit() {
-    // close GL context and any other GLFW resources
-    if (!glfwInitialized_) {
-      glfwTerminate();
-      glfwInitialized_ = false;
-    }
-    // TODO: Delete only if it has been compiled before.
-    glDeleteProgram(starsPipeline_.programme);
-    glDeleteVertexArrays(1, &starsPipeline_.vao);
-  }
-
   virtual Fallible<> Render() = 0;
-  virtual void HandleInput() = 0;
+  virtual Fallible<> HandleInput() = 0;
 
-  virtual void Loop() final {
-    static constexpr int perfectFps = 60;
+  Fallible<> Loop();
 
-    while (!glfwWindowShouldClose(window_)) {
-      auto const renderingStartedAt = std::chrono::steady_clock::now();
+  static int WindowWidth()  { return windowWidth_; }
+  static int WindowHeight() { return windowHeight_; }
 
-      for (int iFrame = 0; iFrame < perfectFps; ++iFrame) {
-        HandleInput();
-
-        glViewport(0, 0, windowWidth_, windowHeight_);
-
-        // Wipe the drawing surface clear.
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (auto rv = Render(); !rv) {
-          ERROR() << "failed to render a frame: " << rv.Err() << '\n';
-        }
-
-        // Update other events like input handling.
-        glfwPollEvents();
-
-        // Put the stuff we've been drawing onto the display.
-        glfwSwapBuffers(window_);
-      }
-
-      auto renderingTook = std::chrono::steady_clock::now() - renderingStartedAt;
-      fps_ = static_cast<double>(perfectFps) / std::chrono::duration<double>(renderingTook).count();
-    }
-  }
-
-  static
-  int WindowWidth() {
-    return windowWidth_;
-  }
-  static
-  int WindowHeight() {
-    return windowHeight_;
-  }
-
-  double Fps() { return fps_; }
+  inline double Fps() const { return 1.0 / std::chrono::duration<double>(lastFrameTook_).count();; }
 
  protected:
-  static
-  void OnGlfwWindowSizeCallback_(GLFWwindow *window, int width, int height) {
-    glfwGetFramebufferSize(window, &width, &height);
-    // auto const dim = std::min(width, height);
-    windowWidth_ = width;
-    windowHeight_ = height;
-    // TODO: update any perspective matrices used here
-  }
-
-  static
-  void OnGlfwErrorCallback_(int error, char const *description) {
-    ERROR() << "GLFW: code=" << error << ": " << description << '\n';
-  }
+  static void OnGlfwWindowSizeCallback_(GLFWwindow *window, int width, int height);
+  static void OnGlfwErrorCallback_(int error, char const *description);
 
   GLFWwindow *window_;
   std::size_t size_;
@@ -272,7 +167,7 @@ struct Graphics {
   static int windowHeight_;
 
  private:
-  double fps_ = 0.0;
+  std::chrono::steady_clock::duration lastFrameTook_ = std::chrono::seconds{1};
   bool glfwInitialized_ = false;
 };
 

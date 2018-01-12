@@ -32,7 +32,7 @@ struct Mat final: std::array<std::array<T, Cols>, Rows> {
         (*this)[0][i] = vec[i];
       }
     } else {
-      static_assert(!vert && !hor, "wrongly sized vector");
+      static_assert(!vert && !hor, "wrong vector sized");
     }
   }
   

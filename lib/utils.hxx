@@ -55,7 +55,15 @@ std::ostream & operator << (std::ostream & os, Error const &err) {
 
 template <typename T = std::monostate>
 struct [[nodiscard]] Fallible final: std::variant<T, Error> {
-  using std::variant<T, Error>::variant;
+  using Base = std::variant<T, Error>;
+
+  constexpr Fallible() noexcept: Base{T{}} {}
+  constexpr Fallible(Fallible const &) = delete;
+  constexpr Fallible(Fallible &&other) noexcept: Base{other} {}
+  // constexpr Fallible(T &&t) noexcept: Base{t} {}
+  // constexpr Fallible(Error &&err) noexcept: Base{err} {}
+  template <typename U>
+  constexpr Fallible(U &&u) noexcept: Base{std::forward<U>(u)} {}
 
   operator bool () const {
     return !std::holds_alternative<Error>(*this);

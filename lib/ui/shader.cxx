@@ -50,7 +50,7 @@ Fallible<> Shader::CompileVertex(char const *shaderSource) {
   }
 
   if (auto rv = CompileShader(GL_VERTEX_SHADER, shaderSource); !rv) {
-    return rv;
+    return std::move(rv);
   } else {
     vertexShader_ = *rv;
   }
@@ -110,7 +110,7 @@ Fallible<> Shader::UsingProgramme(std::function<Fallible<> ()> const fn) const {
   glUseProgram(programme_);
 
   if (Fallible<> rv = fn(); !rv) {
-    return rv;
+    return std::move(rv);
   }
 
   glUseProgram(0);

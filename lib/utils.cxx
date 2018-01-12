@@ -8,10 +8,9 @@
 namespace the {
 
 std::string LoadFile(char const *fpath) {
+  DEBUG() << "LoadFile(" << std::quoted(fpath) << ')';
   std::string s;
   if (std::ifstream is{fpath, std::ios::binary | std::ios::ate}) {
-    DEBUG() << "Reading " << fpath << '\n';
-
     auto size = is.tellg();
     s.resize(size);
     is.seekg(0);
@@ -23,9 +22,8 @@ std::string LoadFile(char const *fpath) {
 
 [[noreturn]]
 void Panic(Error const &err) noexcept {
-  PANIC() << err.What() << '\n';
-          // << "stacktrace:\n"
-          // << err.Where();
+  PANIC() << err.What();
+          // << '\n' << err.Where();
   std::terminate();
 }
 

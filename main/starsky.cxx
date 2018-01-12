@@ -25,18 +25,18 @@ using the::ui::Graphics;
 using the::Fallible;
 
 void PrintGraphicsInfo() {
-  INFO() << "Using GLEW "      << glewGetString(GLEW_VERSION) << '\n';
-  INFO() << "Vendor: "         << glGetString(GL_VENDOR) << '\n';
-  INFO() << "Renderer: "       << glGetString(GL_RENDERER) << '\n';
-  INFO() << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
-  INFO() << "GLSL version: "   << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
+  INFO() << "Using GLEW "      << glewGetString(GLEW_VERSION);
+  INFO() << "Vendor: "         << glGetString(GL_VENDOR);
+  INFO() << "Renderer: "       << glGetString(GL_RENDERER);
+  INFO() << "OpenGL version: " << glGetString(GL_VERSION);
+  INFO() << "GLSL version: "   << glGetString(GL_SHADING_LANGUAGE_VERSION);
 
   GLfloat sizes[2];  // stores supported point size range
   GLfloat step;      // stores supported point size increments
   glGetFloatv(GL_POINT_SIZE_RANGE, sizes);
   glGetFloatv(GL_POINT_SIZE_GRANULARITY, &step);
-  INFO() << "Supported point size range: " << sizes[0] << " ... " << sizes[1] << '\n';
-  INFO() << "Supported point size increments: " << step << '\n';
+  INFO() << "Supported point size range: " << sizes[0] << " ... " << sizes[1];
+  INFO() << "Supported point size increments: " << step;
 
   GLenum params[] = {
     GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
@@ -66,23 +66,24 @@ void PrintGraphicsInfo() {
     "GL_MAX_VIEWPORT_DIMS",
     "GL_STEREO",
   };
-  INFO() << "GL Context Params:\n";
+  INFO() << "GL Context Params:";
   // integers - only works if the order is 0-10 integer return types
   for (int i = 0; i < 10; i++) {
     int v = 0;
     glGetIntegerv(params[i], &v);
-    INFO() << names[i] << ": " << v << '\n';
+    INFO() << names[i] << ": " << v;
   }
   // others
   int v[2];
   v[0] = v[1] = 0;
   glGetIntegerv(params[10], v);
-  INFO() << names[10] << ": " << v[0] << ' ' << v[1] << '\n';
+  INFO() << names[10] << ": " << v[0] << ' ' << v[1];
   unsigned char s = 0;
   glGetBooleanv(params[11], &s);
-  INFO() << names[11] << ": " << (unsigned int)s << '\n';
-  INFO() << "-----------------------------\n";
-  (void)glGetError();  // reset error status
+  INFO() << names[11] << ": " << (unsigned int)s;
+
+  // Reset error status if any non-supported enum attributes were encountered.
+  (void)glGetError();
 }
 
 using the::PPMXLReader;
@@ -103,13 +104,12 @@ struct Starsky {
                           tm.tm_hour, tm.tm_min, secs);
     double gmst = the::GMST(mjd) + positionLongitude_;
 
-    INFO() << "Initialize with these parameters\n";
-    INFO() << "Latitude: " << the::FormatDMS(positionLatitude_ * the::kDeg) << '\n';
-    INFO() << "Altitude: " << the::FormatDMS(positionLongitude_ * the::kDeg) << '\n';
-    INFO() << "Time: " << std::put_time(&tm, "%c %Z") << '\n';
-    INFO() << "MJD: " << mjd << '\n';
-    INFO() << "GMST: " << the::FormatHMS(gmst * the::kDeg) << '\n';
-    INFO() << "-----------------------------\n";
+    INFO() << "Initialize with these parameters";
+    INFO() << "Latitude: " << the::FormatDMS(positionLatitude_ * the::kDeg);
+    INFO() << "Altitude: " << the::FormatDMS(positionLongitude_ * the::kDeg);
+    INFO() << "Time:     " << std::put_time(&tm, "%c %Z");
+    INFO() << "MJD:      " << mjd;
+    INFO() << "GMST:     " << the::FormatHMS(gmst * the::kDeg);
   }
 
   void LoadStars(std::istream &is) {
@@ -118,7 +118,7 @@ struct Starsky {
     while (reader >> data) {
       entries_.push_back(data);
     }
-    INFO() << entries_.size() << " stars loaded from the catalogue\n";
+    INFO() << entries_.size() << " stars loaded from the catalogue";
   }
 
   void SetTime(chrono::system_clock::time_point const &time) {
@@ -220,6 +220,11 @@ struct Starsky {
       the::Equ2Hor(sun.Theta, gmst - sun.Phi, positionLatitude_, elev, az);
       // std::cerr << "elev = " << elev << "; az = " << az << '\n';
       ProcessStar(az, elev, 75);
+
+      std::cout << "sun (az=" << az / the::kRad << ", elev=" << elev / the::kRad << ')' << '\r';
+      // std::stringstream ss;
+      // ss << "sun (az=" << az * the::kRad << ", elev=" << elev * the::kRad << ')';
+      // textPipeline_.debugLine = ss.str();
     }
   }
 
@@ -293,9 +298,11 @@ struct GraphicsProgram: public Graphics {
     Graphics::windowHeight_ = 768;
   }
 
-  void Init() override {
-    this->Graphics::Init();
-    
+  Fallible<> Init() override {
+    if (auto rv = this->Graphics::Init(); !rv) {
+      return std::move(rv);
+    }
+
     timeBeginning_ = chrono::steady_clock::now();
     timeIn_ = chrono::system_clock::now();
 
@@ -304,8 +311,24 @@ struct GraphicsProgram: public Graphics {
     sky_->VertexizeStars();
 
     LoadStars(sky_->Stars());
+
+    return {};
   }
-  
+
+  Fallible<> Deinit() override {
+    if (auto rv = this->Graphics::Deinit(); !rv) {
+      return std::move(rv);
+    }
+
+    glDeleteBuffers(1, &textPipeline_.vboVertices);
+    glDeleteBuffers(1, &textPipeline_.vboIndices);
+    glDeleteVertexArrays(1, &textPipeline_.vao);
+    glDeleteTextures(1, &textPipeline_.textureID);
+    FALL_ON_GL_ERROR();
+
+    return {};
+  }
+
   Fallible<> Render() override {
     auto now = chrono::steady_clock::now();
     timeIn_ += std::chrono::duration_cast<std::chrono::system_clock::duration>(
@@ -323,7 +346,7 @@ struct GraphicsProgram: public Graphics {
 
     RenderStars();
     if (auto rv = RenderText(); !rv) {
-      return rv;
+      return std::move(rv);
     }
 
     return {};
@@ -337,18 +360,21 @@ struct GraphicsProgram: public Graphics {
         std::stringstream ss;
         std::time_t t = std::chrono::system_clock::to_time_t(timeIn_);
         std::tm tm = *std::localtime(&t);
-        ss << "fps: " << std::fixed << Fps()
+        if (!textPipeline_.debugLine.empty())
+          ss << textPipeline_.debugLine << ": ";
+
+        ss << "fps: " << std::fixed << std::setprecision(2) << std::round(Fps())
            << " time: " << std::put_time(&tm, "%c %Z")
            << std::fixed << std::showpoint << std::setprecision(3)
            << " rot (x, y): "
            << '(' << viewAngleX_ / the::kRad << ", " << viewAngleY_ / the::kRad << ')';
-        auto const str = ss.str();
+        auto const &str = ss.str();
         auto image = the::ui::RenderFont({str.c_str(), str.size()});
         if (!image) {
           ERROR() << "failed to render the text " << std::quoted(str) << ": " << image.Err();
           return image;
         }
-    
+
         glActiveTexture(GL_TEXTURE0);
         FALL_ON_GL_ERROR();
         glBindTexture(GL_TEXTURE_2D, textPipeline_.textureID);
@@ -362,7 +388,7 @@ struct GraphicsProgram: public Graphics {
       });
   }
 
-  void HandleInput() override {
+  Fallible<> HandleInput() override {
     double const rotationStep = the::kPi / 12.0 / 60.0;
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_ESCAPE) || GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Q)) {
       glfwSetWindowShouldClose(window_, 1);
@@ -388,6 +414,10 @@ struct GraphicsProgram: public Graphics {
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_X)) {
       sky_->ToggleExtra();
     }
+
+    FALL_ON_GL_ERROR();
+
+    return {};
   }
 
   void SetSky(Starsky *sky) {
@@ -395,15 +425,6 @@ struct GraphicsProgram: public Graphics {
   }
 
   Fallible<> LoadShaders();
-
-  void Deinit() override {
-    this->Graphics::Deinit();
-
-    glDeleteBuffers(1, &textPipeline_.vboVertices);
-    glDeleteBuffers(1, &textPipeline_.vboIndices);
-    glDeleteVertexArrays(1, &textPipeline_.vao);
-    glDeleteTextures(1, &textPipeline_.textureID);
-  }
 
  private:
   // double viewAngleX_ = -(90.0 - 53.319927) * the::kRad; // the::kPi/2.0;
@@ -422,22 +443,23 @@ struct GraphicsProgram: public Graphics {
     GLuint vboVertices;
     GLuint vboIndices;
     GLuint vao;
+    std::string debugLine;
   } textPipeline_;
 };
 
 Fallible<> GraphicsProgram::LoadShaders() {
   if (auto rv = this->Graphics::LoadShaders(); !rv)
-    return rv;
-    
+    return std::move(rv);
+
   auto vertexShader   = the::LoadFile("lib/shaders/text.vert.glsl");
   auto fragmentShader = the::LoadFile("lib/shaders/text.frag.glsl");
 
   if (auto rv = textPipeline_.shader.CompileVertex(vertexShader.c_str()); !rv)
-    return rv;
+    return std::move(rv);
   if (auto rv = textPipeline_.shader.CompileFragment(fragmentShader.c_str()); !rv)
-    return rv;
+    return std::move(rv);
   if (auto rv = textPipeline_.shader.LinkProgramme(); !rv)
-    return rv;
+    return std::move(rv);
 
   glUseProgram(textPipeline_.shader.Programme());
   FALL_ON_GL_ERROR();
@@ -486,7 +508,7 @@ Fallible<> GraphicsProgram::LoadShaders() {
   if (!image) {
     ERROR() << "failed to render the text " << std::quoted(str) << ": " << image.Err();
   }
-    
+
   glGenTextures(1, &textPipeline_.textureID);
   FALL_ON_GL_ERROR();
   glActiveTexture(GL_TEXTURE0);
@@ -518,15 +540,19 @@ int main() {
   sky->LoadStars(std::cin);
 
   graphics.SetSky(sky);
-  graphics.Init();
-  PrintGraphicsInfo();
+  if (auto rv = graphics.Init(); !rv)
+    the::Panic(rv.Err().What());
 
+  PrintGraphicsInfo();
 
   if (auto rv = graphics.LoadShaders(); !rv)
     the::Panic(rv.Err().What());
 
-  graphics.Loop();
-  graphics.Deinit();
+  if (auto rv = graphics.Loop(); !rv)
+    the::Panic(rv.Err().What());
+
+  if (auto rv = graphics.Deinit(); !rv)
+    the::Panic(rv.Err().What());
 
   return 0;
 }
