@@ -20,6 +20,7 @@ build:asan --define signal_trace=disabled
 
 build:release --copt -Ofast
 build:release --copt -DNDEBUG
+build:release --copt -DGSL_UNENFORCED_ON_CONTRACT_VIOLATION
 
 test --crosstool_top=//tools/cpp:default-toolchain
 test --verbose_failures

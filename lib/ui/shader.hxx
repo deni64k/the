@@ -12,8 +12,8 @@ struct Shader final {
   Shader();
   ~Shader();
 
-  Fallible<> CompileVertex(char const *shaderSource);
-  Fallible<> CompileFragment(char const *shaderSource);
+  Fallible<> CompileVertex(gsl::span<char const> shaderSource);
+  Fallible<> CompileFragment(gsl::span<char const> shaderSource);
   Fallible<> LinkProgramme();
   Fallible<> UsingProgramme(std::function<Fallible<> ()> const fn) const;
 

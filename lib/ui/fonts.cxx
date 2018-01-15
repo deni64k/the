@@ -7,7 +7,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "lib/log.hxx"
+#include "lib/logging.hxx"
 #include "lib/ui/fonts.hxx"
 
 #ifdef DEBUG
@@ -79,7 +79,7 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
   FT_Error err;
 
   if (err = FT_Init_FreeType(&library); err != 0) {
-    return {Error{"FT_Init_FreeType failed"}};
+    return {RuntimeError{"FT_Init_FreeType failed"}};
   }
 
   FT_Face face;
@@ -96,9 +96,9 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
       // No error.
       break;
     case FT_Err_Unknown_File_Format:
-      return {Error{"FT_New_Face failed: unknown font format"}};
+      return {RuntimeError{"FT_New_Face failed: unknown font format"}};
     default:
-      return {Error{"FT_New_Face failed"}};
+      return {RuntimeError{"FT_New_Face failed"}};
   }
 
   bool const useKerning = FT_HAS_KERNING(face);
@@ -127,7 +127,7 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
                              300,     // horizontal device resolution
                              300);    // vertical device resolution
       err != 0) {
-    return {Error{"FT_Set_Char_Size failed"}};
+    return {RuntimeError{"FT_Set_Char_Size failed"}};
   }
 
   int penX = 0;
@@ -161,7 +161,7 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
     
     // https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#FT_LOAD_XXX
     if (err = FT_Load_Glyph(face, glyphIndex, FT_LOAD_TARGET_NORMAL | FT_LOAD_RENDER); err != 0) {
-      return {Error{"FT_Load_Glyph failed"}};
+      return {RuntimeError{"FT_Load_Glyph failed"}};
     }
 
     auto const &slot   = face->glyph;
@@ -182,7 +182,7 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
         FT_Vector delta;
 
         if (err = FT_Get_Kerning(face, glyphIndexPrev, glyphIndex, FT_KERNING_DEFAULT, &delta); err != 0) {
-          return {Error{"FT_Get_Kerning failed"}};
+          return {RuntimeError{"FT_Get_Kerning failed"}};
         }
 
         DEBUG() << "delta = (" << (delta.x >> 6) << ", " << (delta.y >> 6) << ')';
@@ -212,11 +212,11 @@ Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
   // DumpBmp(bmp, "font.ppm");
 
   if (err = FT_Done_Face(face); err != 0) {
-    return {Error{"FT_Done_Face failed"}};
+    return {RuntimeError{"FT_Done_Face failed"}};
   }
 
   if (err = FT_Done_FreeType(library); err != 0) {
-    return {Error{"FT_Done_FreeType failed"}};
+    return {RuntimeError{"FT_Done_FreeType failed"}};
   }
 
   Image<std::uint8_t[4]> resultBmp{static_cast<std::size_t>(penX), bmp.Height()};

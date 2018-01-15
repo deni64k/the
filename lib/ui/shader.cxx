@@ -1,16 +1,20 @@
+#include <gsl.h>
 #include <vector>
 
+#include "lib/ui/errors.hxx"
 #include "lib/ui/shader.hxx"
-#include "lib/ui/impl/errors.hxx"
 #include "lib/utils.hxx"
 
 namespace the::ui {
 
 namespace {
-Fallible<GLuint> CompileShader(GLenum shaderType, GLchar const *shaderSource) {
+Fallible<GLuint> CompileShader(GLenum shaderType, gsl::span<char const> shaderSource) {
+  GLchar const *strings[] = {shaderSource.data()};
+  GLint  const  lengths[] = {static_cast<GLint>(shaderSource.size())};
+
   GLuint shader = glCreateShader(shaderType);
   FALL_ON_GL_ERROR();
-  glShaderSource(shader, 1, &shaderSource, nullptr);
+  glShaderSource(shader, 1, strings, lengths);
   FALL_ON_GL_ERROR();
   glCompileShader(shader);
   FALL_ON_GL_ERROR();
@@ -27,7 +31,7 @@ Fallible<GLuint> CompileShader(GLenum shaderType, GLchar const *shaderSource) {
     glGetShaderInfoLog(shader, logLength, &logLength, log.data());
     FALL_ON_GL_ERROR();
 
-    return {OpenGlError{std::string{log.data(), static_cast<std::size_t>(logLength)}}};
+    return {OglRuntimeError{std::string{log.data(), static_cast<std::size_t>(logLength)}}};
   }
   
   return {shader};
@@ -43,7 +47,7 @@ Shader::~Shader() {
   glDeleteShader(fragmentShader_);
 }
 
-Fallible<> Shader::CompileVertex(char const *shaderSource) {
+Fallible<> Shader::CompileVertex(gsl::span<char const> shaderSource) {
   if (!vertexShader_) {
     glDeleteShader(vertexShader_);
     vertexShader_ = 0;
@@ -58,7 +62,7 @@ Fallible<> Shader::CompileVertex(char const *shaderSource) {
   return {};
 }
 
-Fallible<> Shader::CompileFragment(char const *shaderSource) {
+Fallible<> Shader::CompileFragment(gsl::span<char const> shaderSource) {
   if (!fragmentShader_) {
     glDeleteShader(fragmentShader_);
     fragmentShader_ = 0;
@@ -94,7 +98,7 @@ Fallible<> Shader::LinkProgramme() {
     std::vector<GLchar> log(logLength);
     glGetProgramInfoLog(programme, logLength, &logLength, log.data());
 
-    return {OpenGlError{std::string{log.data(), static_cast<std::size_t>(logLength)}}};
+    return {OglRuntimeError{std::string{log.data(), static_cast<std::size_t>(logLength)}}};
   }
 
   programme_ = programme;
@@ -104,7 +108,7 @@ Fallible<> Shader::LinkProgramme() {
 
 Fallible<> Shader::UsingProgramme(std::function<Fallible<> ()> const fn) const {
   if (!programme_) {
-    return {Error{"use of shader programme while it is not linked"}};
+    return {RuntimeError{"use of shader programme while it is not linked"}};
   }
 
   glUseProgram(programme_);

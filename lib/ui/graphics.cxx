@@ -1,7 +1,7 @@
 #include <thread>
 
 #include "lib/ui/graphics.hxx"
-#include "lib/ui/impl/errors.hxx"
+#include "lib/ui/errors.hxx"
 
 namespace the::ui {
 
@@ -15,7 +15,7 @@ Fallible<> Graphics::Init() {
 
   // start GL context and O/S window using the GLFW helper library
   if (!glfwInit()) {
-    return {OpenGlError{"could not start GLFW3"}};
+    return {OglRuntimeError{"could not start GLFW3"}};
   }
   glfwInitialized_ = true;
 
@@ -39,7 +39,7 @@ Fallible<> Graphics::Init() {
   window_ = glfwCreateWindow(
       WindowWidth(), WindowHeight(), "Stars sky", nullptr, nullptr);
   if (!window_) {
-    return {OpenGlError{"could not open window with GLFW3"}};
+    return {OglRuntimeError{"could not open window with GLFW3"}};
   }
   glfwGetFramebufferSize(window_, &Graphics::windowWidth_, &Graphics::windowHeight_);
   FALL_ON_GL_ERROR();
@@ -82,9 +82,9 @@ Fallible<> Graphics::LoadShaders() {
   auto vertexShader   = LoadFile("lib/shaders/vertex.glsl");
   auto fragmentShader = LoadFile("lib/shaders/fragment.glsl");
 
-  if (auto rv = starsPipeline_.shader.CompileVertex(vertexShader.c_str()); !rv)
+  if (auto rv = starsPipeline_.shader.CompileVertex(vertexShader); !rv)
     return rv;
-  if (auto rv = starsPipeline_.shader.CompileFragment(fragmentShader.c_str()); !rv)
+  if (auto rv = starsPipeline_.shader.CompileFragment(fragmentShader); !rv)
     return rv;
   if (auto rv = starsPipeline_.shader.LinkProgramme(); !rv)
     return rv;

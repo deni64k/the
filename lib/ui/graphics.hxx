@@ -9,43 +9,11 @@
 #include <GLFW/glfw3.h>
 
 #include "lib/consts.hxx"
-#include "lib/log.hxx"
-#include "lib/utils.hxx"
+#include "lib/errors.hxx"
+#include "lib/logging.hxx"
 #include "lib/mat.hxx"
 #include "lib/ui/errors.hxx"
 #include "lib/ui/shader.hxx"
-
-static
-char const * GlErrorToString(GLenum err) {
-  switch (err) {
-    case GL_NO_ERROR:
-      return "GL_NO_ERROR";
-    case GL_INVALID_ENUM:
-      return "GL_INVALID_ENUM";
-    case GL_INVALID_VALUE:
-      return "GL_INVALID_VALUE";
-    case GL_INVALID_OPERATION:
-      return "GL_INVALID_OPERATION";
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-      return "GL_INVALID_FRAMEBUFFER_OPERATION";
-    case GL_OUT_OF_MEMORY:
-      return "GL_OUT_OF_MEMORY";
-    case GL_STACK_UNDERFLOW:
-      return "GL_STACK_UNDERFLOW";
-    case GL_STACK_OVERFLOW:
-      return "GL_STACK_OVERFLOW";
-    default:
-      return "GlErrorToString(unknown)";
-  }
-}
-
-#define PANIC_ON_GL_ERROR                                               \
-  if (auto const err = glGetError(); err != GL_NO_ERROR) {              \
-    std::stringstream ss;                                               \
-    ss << __func__ << ':' << __LINE__ << ": glGetError=" << err         \
-       << ": " << GlErrorToString(err);                                 \
-    the::Panic(ss.str());                                               \
-  }
 
 namespace the::ui {
 
@@ -103,17 +71,17 @@ struct Graphics {
     static float const zNear = 0.1f;
     static float const zFar = 10.0f;
     static float const zRange = zNear - zFar;
-    float const ratio = windowWidth_ / windowHeight_;
+    float const ratio = static_cast<float>(windowWidth_) / static_cast<float>(windowHeight_);
 
     // Vec3 const position = {
 
     // };
 
     return {
-        1.0f / (tanFov * ratio), 0.0f,          0.0f,                     0.0f,
-        0.0f,                    1.0f / tanFov, 0.0f,                     0.0f,
-        0.0f,                    0.0f,          -(zNear + zFar) / zRange, 2.0f * zFar * zNear / zRange,
-        0.0f,                    0.0f,          1.0f,                     0.0f
+      1.0f / (tanFov * ratio), 0.0f,          0.0f,                     0.0f,
+      0.0f,                    1.0f / tanFov, 0.0f,                     0.0f,
+      0.0f,                    0.0f,          -(zNear + zFar) / zRange, 2.0f * zFar * zNear / zRange,
+      0.0f,                    0.0f,          1.0f,                     0.0f
     };
   }
 
@@ -151,8 +119,12 @@ struct Graphics {
 
   static int WindowWidth()  { return windowWidth_; }
   static int WindowHeight() { return windowHeight_; }
+  static float Dpu() {
+    return 1.0f / (static_cast<float>(windowWidth_) / static_cast<float>(windowHeight_));
+  }
 
-  inline double Fps() const { return 1.0 / std::chrono::duration<double>(lastFrameTook_).count();; }
+  inline double Fps() const { return 1.0 / std::chrono::duration<double>(lastFrameTook_).count(); }
+
 
  protected:
   static void OnGlfwWindowSizeCallback_(GLFWwindow *window, int width, int height);

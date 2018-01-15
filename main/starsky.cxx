@@ -8,14 +8,14 @@
 #include <utility>
 
 #include "lib/consts.hxx"
-#include "lib/log.hxx"
+#include "lib/logging.hxx"
 #include "lib/ppmxlreader.hxx"
 #include "lib/spheric.hxx"
 #include "lib/sun.hxx"
 #include "lib/time.hxx"
+#include "lib/ui/errors.hxx"
 #include "lib/ui/fonts.hxx"
 #include "lib/ui/graphics.hxx"
-#include "lib/ui/impl/errors.hxx"
 #include "lib/ui/shader.hxx"
 #include "lib/utils.hxx"
 
@@ -88,8 +88,8 @@ void PrintGraphicsInfo() {
 
 using the::PPMXLReader;
 
-struct Starsky {
-  Starsky()
+struct Almanac {
+  Almanac()
   {}
 
   void Init() {
@@ -306,11 +306,11 @@ struct GraphicsProgram: public Graphics {
     timeBeginning_ = chrono::steady_clock::now();
     timeIn_ = chrono::system_clock::now();
 
-    sky_->SetTime(timeIn_);
-    sky_->SetRotation(viewAngleX_, viewAngleY_);
-    sky_->VertexizeStars();
+    almanac_->SetTime(timeIn_);
+    almanac_->SetRotation(viewAngleX_, viewAngleY_);
+    almanac_->VertexizeStars();
 
-    LoadStars(sky_->Stars());
+    LoadStars(almanac_->Stars());
 
     return {};
   }
@@ -337,12 +337,12 @@ struct GraphicsProgram: public Graphics {
     timeBeginning_ = now;
     // timeIn_ += timeScale * (chrono::steady_clock::now() - timeBeginning_)).count();
 
-    sky_->SetTime(timeIn_);
-    sky_->SetRotation(viewAngleX_, viewAngleY_);
-    sky_->VertexizeStars();
+    almanac_->SetTime(timeIn_);
+    almanac_->SetRotation(viewAngleX_, viewAngleY_);
+    almanac_->VertexizeStars();
 
-    // LoadStars(sky_->Stars());
-    UpdateStars(sky_->Stars());
+    // LoadStars(almanac_->Stars());
+    UpdateStars(almanac_->Stars());
 
     RenderStars();
     if (auto rv = RenderText(); !rv) {
@@ -412,7 +412,7 @@ struct GraphicsProgram: public Graphics {
       viewAngleY_ =  0;//the::kPi;
     }
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_X)) {
-      sky_->ToggleExtra();
+      almanac_->ToggleExtra();
     }
 
     FALL_ON_GL_ERROR();
@@ -420,8 +420,8 @@ struct GraphicsProgram: public Graphics {
     return {};
   }
 
-  void SetSky(Starsky *sky) {
-    sky_ = sky;
+  void SetSky(Almanac *almanac) {
+    almanac_ = almanac;
   }
 
   Fallible<> LoadShaders();
@@ -431,7 +431,7 @@ struct GraphicsProgram: public Graphics {
   double viewAngleX_ = (90.0) * the::kRad; // the::kPi/2.0;
   double viewAngleY_ =  0; // the::kPi;
 
-  Starsky *sky_;
+  Almanac *almanac_;
   chrono::system_clock::time_point timeIn_;
   chrono::steady_clock::time_point timeBeginning_;
 
@@ -440,6 +440,7 @@ struct GraphicsProgram: public Graphics {
     GLuint textureID;
     GLuint vVertex;
     GLuint textureMap;
+    GLuint uiWidth, uiHeight;
     GLuint vboVertices;
     GLuint vboIndices;
     GLuint vao;
@@ -454,9 +455,9 @@ Fallible<> GraphicsProgram::LoadShaders() {
   auto vertexShader   = the::LoadFile("lib/shaders/text.vert.glsl");
   auto fragmentShader = the::LoadFile("lib/shaders/text.frag.glsl");
 
-  if (auto rv = textPipeline_.shader.CompileVertex(vertexShader.c_str()); !rv)
+  if (auto rv = textPipeline_.shader.CompileVertex(vertexShader); !rv)
     return std::move(rv);
-  if (auto rv = textPipeline_.shader.CompileFragment(fragmentShader.c_str()); !rv)
+  if (auto rv = textPipeline_.shader.CompileFragment(fragmentShader); !rv)
     return std::move(rv);
   if (auto rv = textPipeline_.shader.LinkProgramme(); !rv)
     return std::move(rv);
@@ -468,8 +469,19 @@ Fallible<> GraphicsProgram::LoadShaders() {
   FALL_ON_GL_ERROR();
   textPipeline_.textureMap = glGetUniformLocation(textPipeline_.shader.Programme(), "textureMap");
   FALL_ON_GL_ERROR();
+  textPipeline_.uiWidth    = glGetUniformLocation(textPipeline_.shader.Programme(), "uiWidth");
+  FALL_ON_GL_ERROR();
+  textPipeline_.uiHeight   = glGetUniformLocation(textPipeline_.shader.Programme(), "uiHeight");
+  FALL_ON_GL_ERROR();
 
   glUniform1i(textPipeline_.textureMap, 0);
+  FALL_ON_GL_ERROR();
+
+  DEBUG() << "WindowWidth()=" << WindowWidth();
+  glUniform1i(textPipeline_.uiWidth, WindowWidth());
+  FALL_ON_GL_ERROR();
+  DEBUG() << "WindowHeight()=" << WindowHeight();
+  glUniform1i(textPipeline_.uiHeight, WindowHeight());
   FALL_ON_GL_ERROR();
 
   GLfloat vertices[][2] = {
@@ -535,24 +547,24 @@ int main() {
 
   GraphicsProgram graphics;
 
-  gsl::owner<Starsky *> sky = new Starsky{};
-  sky->Init();
-  sky->LoadStars(std::cin);
+  auto almanac = std::make_unique<Almanac>();
+  almanac->Init();
+  almanac->LoadStars(std::cin);
 
-  graphics.SetSky(sky);
+  graphics.SetSky(almanac.get());
   if (auto rv = graphics.Init(); !rv)
-    the::Panic(rv.Err().What());
+    the::Panic(rv.Err());
 
   PrintGraphicsInfo();
 
   if (auto rv = graphics.LoadShaders(); !rv)
-    the::Panic(rv.Err().What());
+    the::Panic(rv.Err());
 
   if (auto rv = graphics.Loop(); !rv)
-    the::Panic(rv.Err().What());
+    the::Panic(rv.Err());
 
   if (auto rv = graphics.Deinit(); !rv)
-    the::Panic(rv.Err().What());
+    the::Panic(rv.Err());
 
   return 0;
 }

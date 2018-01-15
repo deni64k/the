@@ -1,4 +1,4 @@
-#include "log.hxx"
+#include "logging.hxx"
 
 #include <cstdarg>
 #include <cstdio>
