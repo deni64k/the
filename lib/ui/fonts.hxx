@@ -6,7 +6,7 @@
 
 #include <gsl.h>
 
-#include "lib/errors.hxx"
+#include "lib/ui/errors.hxx"
 
 namespace the::ui {
 
@@ -88,6 +88,6 @@ struct Image {
   std::size_t width_, height_;
 };
 
-Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text);
+OglFallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text);
 
 }

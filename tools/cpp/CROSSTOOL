@@ -111,6 +111,8 @@ toolchain {
   tool_path { name: "dwp" path: "/usr/bin/dwp" }
   tool_path { name: "gcc" path: "/usr/bin/gcc" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   linker_flag: "-lstdc++"
   linker_flag: "-B/usr/bin/"
 
@@ -226,6 +228,8 @@ toolchain {
   tool_path { name: "dwp" path: "/usr/bin/dwp" }
   tool_path { name: "gcc" path: "osx_cc_wrapper.sh" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   linker_flag: "-lstdc++"
   linker_flag: "-undefined"
   linker_flag: "dynamic_lookup"
@@ -335,6 +339,8 @@ toolchain {
   tool_path { name: "dwp" path: "/usr/bin/dwp" }
   tool_path { name: "gcc" path: "/usr/bin/clang" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   linker_flag: "-lstdc++"
   linker_flag: "-B/usr/bin/"
 
@@ -449,6 +455,8 @@ toolchain {
   tool_path { name: "dwp" path: "C:/mingw/bin/dwp" }
   tool_path { name: "gcc" path: "C:/mingw/bin/gcc" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   # TODO(bazel-team): In theory, the path here ought to exactly match the path
   # used by gcc. That works because bazel currently doesn't track files at
   # absolute locations and has no remote execution, yet. However, this will need
@@ -484,6 +492,8 @@ toolchain {
   tool_path { name: "dwp" path: "C:/tools/msys64/mingw64/bin/dwp" }
   tool_path { name: "gcc" path: "C:/tools/msys64/mingw64/bin/gcc" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   # TODO(bazel-team): In theory, the path here ought to exactly match the path
   # used by gcc. That works because bazel currently doesn't track files at
   # absolute locations and has no remote execution, yet. However, this will need
@@ -518,6 +528,8 @@ toolchain {
   tool_path { name: "dwp" path: "C:/Program Files (x86)/LLVM/bin/dwp" }
   tool_path { name: "gcc" path: "C:/Program Files (x86)/LLVM/bin/clang" }
   cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   # TODO(bazel-team): In theory, the path here ought to exactly match the path
   # used by gcc. That works because bazel currently doesn't track files at
   # absolute locations and has no remote execution, yet. However, this will need
@@ -554,7 +566,9 @@ toolchain {
   tool_path { name: "dwp" path: "C:/tools/msys64/usr/bin/dwp" }
   # Use gcc instead of g++ so that C will compile correctly.
   tool_path { name: "gcc" path: "C:/tools/msys64/usr/bin/gcc" }
-  cxx_flag: "-std=gnu++0x"
+  cxx_flag: "-std=c++17"
+  cxx_flag: "-fconcepts"
+  cxx_flag: "-fno-exceptions"
   linker_flag: "-lstdc++"
   # TODO(bazel-team): In theory, the path here ought to exactly match the path
   # used by gcc. That works because bazel currently doesn't track files at

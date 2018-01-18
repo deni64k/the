@@ -10,49 +10,39 @@
 
 #define FALL_ON_GL_ERROR(...)                                           \
   if (auto const code = glGetError(); code != GL_NO_ERROR) {            \
-    using ::the::ui::OglPositionedError;                                \
-    using ::the::ui::OglRuntimeError;                                   \
+    using ::the::RuntimeError;                                          \
+    using ::the::ui::OglError;                                          \
     if constexpr (std::tuple_size<decltype(                             \
         std::make_tuple(__VA_ARGS__))>::value > 0) {                    \
       std::stringstream ss;                                             \
-      ss << OglPositionedError{                                         \
-        code, __FILE__, PRETTY_FUNCTION, __LINE__                       \
-      };                                                                \
+      ss << OglError{code, PP_WHERE, PP_FUNCTION};                      \
       std::apply([&ss](auto ...x) {                                     \
           (..., (ss << ": " << x));                                     \
         },                                                              \
         std::make_tuple(__VA_ARGS__)                                    \
       );                                                                \
-      return {OglRuntimeError{ss.str()}};                               \
+      return {RuntimeError{ss.str()}};                                  \
     } else {                                                            \
-      return {                                                          \
-        OglPositionedError{code, __FILE__, PRETTY_FUNCTION, __LINE__}   \
-      };                                                                \
+      return {OglError{code, PP_WHERE, PP_FUNCTION}};                   \
     }                                                                   \
   }
 
 #define PANIC_ON_GL_ERROR                                               \
   if (auto const code = glGetError(); code != GL_NO_ERROR) {            \
-    using ::the::ui::OglPositionedError;                                \
-    the::Panic(                                                         \
-      OglPositionedError{code, __FILE__, PRETTY_FUNCTION, __LINE__}     \
-    );                                                                  \
+    using ::the::ui::OglError;                                          \
+    the::Panic(OglError{code, PP_WHERE, PP_FUNCTION});                  \
   }
 
 namespace the::ui {
 
-struct OglRuntimeError: public RuntimeError {
-  using RuntimeError::RuntimeError;
-
-  void What(std::ostream &os) const noexcept override {
-    os << message_;
-  }
-};
-
 struct OglError: public Error {
-  constexpr OglError(GLuint code): code_{code} {}
+  constexpr OglError(GLuint const code): code_{code} {}
+  constexpr OglError(GLuint const code, char const where[], char const *func)
+  : code_{code}, where_{where}, func_{func} {}
 
   void What(std::ostream &os) const noexcept override {
+    if (where_ && func_)
+      os << where_ << " `" << func_ << "': ";
     os << "glGetError returned " << OglErrorToString(code_)
        << " (" << code_ << ')';
   }
@@ -82,22 +72,12 @@ struct OglError: public Error {
     }
   }
 
-  GLuint code_;
-};
+  GLuint      code_;
+  char const *where_ = nullptr;
+  char const *func_  = nullptr;
+} __attribute__((packed));
 
-struct OglPositionedError: public OglError {
-  constexpr OglPositionedError(GLuint code, char const *file, char const *func, int const line)
-  : OglError{code}, file_{file}, func_{func}, line_{line} {}
-
-  void What(std::ostream &os) const noexcept override {
-    os << file_ << ':' << func_ << ':' << line_
-       << ": " << static_cast<OglError const &>(*this);
-  }
-
- protected:
-  char const *file_;
-  char const *func_;
-  int  const  line_;
-};
+template <typename T = std::monostate, typename... Es>
+using OglFallible = Fallible<T, OglError, Es...>;
 
 }

@@ -22,7 +22,7 @@
 namespace chrono = std::chrono;
 
 using the::ui::Graphics;
-using the::Fallible;
+using the::ui::OglFallible;
 
 void PrintGraphicsInfo() {
   INFO() << "Using GLEW "      << glewGetString(GLEW_VERSION);
@@ -298,7 +298,7 @@ struct GraphicsProgram: public Graphics {
     Graphics::windowHeight_ = 768;
   }
 
-  Fallible<> Init() override {
+  OglFallible<> Init() override {
     if (auto rv = this->Graphics::Init(); !rv) {
       return std::move(rv);
     }
@@ -315,7 +315,7 @@ struct GraphicsProgram: public Graphics {
     return {};
   }
 
-  Fallible<> Deinit() override {
+  OglFallible<> Deinit() override {
     if (auto rv = this->Graphics::Deinit(); !rv) {
       return std::move(rv);
     }
@@ -329,7 +329,7 @@ struct GraphicsProgram: public Graphics {
     return {};
   }
 
-  Fallible<> Render() override {
+  OglFallible<> Render() override {
     auto now = chrono::steady_clock::now();
     timeIn_ += std::chrono::duration_cast<std::chrono::system_clock::duration>(
         timeScale * (now - timeBeginning_)
@@ -352,8 +352,8 @@ struct GraphicsProgram: public Graphics {
     return {};
   }
 
-  Fallible<> RenderText() {
-    return textPipeline_.shader.UsingProgramme([this]() -> Fallible<> {
+  OglFallible<> RenderText() {
+    return textPipeline_.shader.UsingProgramme([this]() -> OglFallible<> {
         glBindVertexArray(textPipeline_.vao);
         FALL_ON_GL_ERROR();
 
@@ -388,7 +388,7 @@ struct GraphicsProgram: public Graphics {
       });
   }
 
-  Fallible<> HandleInput() override {
+  OglFallible<> HandleInput() override {
     double const rotationStep = the::kPi / 12.0 / 60.0;
     if (GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_ESCAPE) || GLFW_PRESS == glfwGetKey(window_, GLFW_KEY_Q)) {
       glfwSetWindowShouldClose(window_, 1);
@@ -424,7 +424,7 @@ struct GraphicsProgram: public Graphics {
     almanac_ = almanac;
   }
 
-  Fallible<> LoadShaders();
+  OglFallible<> LoadShaders();
 
  private:
   // double viewAngleX_ = -(90.0 - 53.319927) * the::kRad; // the::kPi/2.0;
@@ -448,7 +448,7 @@ struct GraphicsProgram: public Graphics {
   } textPipeline_;
 };
 
-Fallible<> GraphicsProgram::LoadShaders() {
+OglFallible<> GraphicsProgram::LoadShaders() {
   if (auto rv = this->Graphics::LoadShaders(); !rv)
     return std::move(rv);
 
@@ -541,10 +541,37 @@ Fallible<> GraphicsProgram::LoadShaders() {
   return {};
 }
 
+struct E0 : public the::Error {
+  void What(std::ostream &) {}
+};
+
+template <typename T>
+struct E1 : public the::Error {
+  void What(std::ostream &) {}
+  T x;
+} __attribute__ ((packed));
+
+template <typename T>
+struct C1 {
+  void *p;
+  T x;
+} __attribute__ ((packed));
+
 int main() {
   std::cin.sync_with_stdio(false);
   std::cin.tie(nullptr);
 
+  DEBUG() << "sizeof(GLuint)=" << sizeof(GLuint);
+  DEBUG() << "sizeof(E0)=" << sizeof(E0);
+  DEBUG() << "sizeof(E1<std::uint8_t>)=" << sizeof(E1<std::uint8_t>);
+  DEBUG() << "sizeof(C1<std::uint8_t>)=" << sizeof(C1<std::uint8_t>);
+  DEBUG() << "sizeof(std::string)=" << sizeof(std::string);
+  DEBUG() << "sizeof(Error)=" << sizeof(the::Error);
+  DEBUG() << "sizeof(RuntimeError)=" << sizeof(the::RuntimeError);
+  DEBUG() << "sizeof(OglError)=" << sizeof(the::ui::OglError);
+  DEBUG() << "sizeof(Fallible<>)=" << sizeof(the::Fallible<>);
+  DEBUG() << "sizeof(OglFallible<>)=" << sizeof(the::ui::OglFallible<>);
+  
   GraphicsProgram graphics;
 
   auto almanac = std::make_unique<Almanac>();

@@ -31,8 +31,8 @@ struct Graphics {
     GLuint modelToWorldMatrix;
   };
 
-  virtual Fallible<> Init();
-  virtual Fallible<> Deinit();
+  virtual OglFallible<> Init();
+  virtual OglFallible<> Deinit();
 
   void LoadStars(gsl::span<Star const> const &stars) {
     size_ = stars.size();
@@ -110,12 +110,12 @@ struct Graphics {
     PANIC_ON_GL_ERROR;
   }
 
-  Fallible<> LoadShaders();
+  OglFallible<> LoadShaders();
 
-  virtual Fallible<> Render() = 0;
-  virtual Fallible<> HandleInput() = 0;
+  virtual OglFallible<> Render() = 0;
+  virtual OglFallible<> HandleInput() = 0;
 
-  Fallible<> Loop();
+  OglFallible<> Loop();
 
   static int WindowWidth()  { return windowWidth_; }
   static int WindowHeight() { return windowHeight_; }

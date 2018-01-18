@@ -8,14 +8,14 @@ namespace the::ui {
 int Graphics::windowWidth_;
 int Graphics::windowHeight_;
 
-Fallible<> Graphics::Init() {
+OglFallible<> Graphics::Init() {
   using namespace std::placeholders;
 
   glfwSetErrorCallback(Graphics::OnGlfwErrorCallback_);
 
   // start GL context and O/S window using the GLFW helper library
   if (!glfwInit()) {
-    return {OglRuntimeError{"could not start GLFW3"}};
+    return {RuntimeError{"could not start GLFW3"}};
   }
   glfwInitialized_ = true;
 
@@ -39,7 +39,7 @@ Fallible<> Graphics::Init() {
   window_ = glfwCreateWindow(
       WindowWidth(), WindowHeight(), "Stars sky", nullptr, nullptr);
   if (!window_) {
-    return {OglRuntimeError{"could not open window with GLFW3"}};
+    return {RuntimeError{"could not open window with GLFW3"}};
   }
   glfwGetFramebufferSize(window_, &Graphics::windowWidth_, &Graphics::windowHeight_);
   FALL_ON_GL_ERROR();
@@ -64,7 +64,7 @@ Fallible<> Graphics::Init() {
   return {};
 }
 
-Fallible<> Graphics::Deinit() {
+OglFallible<> Graphics::Deinit() {
   // close GL context and any other GLFW resources
   if (!glfwInitialized_) {
     glfwTerminate();
@@ -78,7 +78,7 @@ Fallible<> Graphics::Deinit() {
   return {};
 }
 
-Fallible<> Graphics::LoadShaders() {
+OglFallible<> Graphics::LoadShaders() {
   auto vertexShader   = LoadFile("lib/shaders/vertex.glsl");
   auto fragmentShader = LoadFile("lib/shaders/fragment.glsl");
 
@@ -95,7 +95,7 @@ Fallible<> Graphics::LoadShaders() {
   return {};
 }
 
-Fallible<> Graphics::Loop() {
+OglFallible<> Graphics::Loop() {
   using namespace std::literals::chrono_literals;
 
   static constexpr auto perfectFps = 60u;

@@ -12,10 +12,10 @@ struct Shader final {
   Shader();
   ~Shader();
 
-  Fallible<> CompileVertex(gsl::span<char const> shaderSource);
-  Fallible<> CompileFragment(gsl::span<char const> shaderSource);
-  Fallible<> LinkProgramme();
-  Fallible<> UsingProgramme(std::function<Fallible<> ()> const fn) const;
+  OglFallible<> CompileVertex(gsl::span<char const> shaderSource);
+  OglFallible<> CompileFragment(gsl::span<char const> shaderSource);
+  OglFallible<> LinkProgramme();
+  OglFallible<> UsingProgramme(std::function<OglFallible<> ()> const fn) const;
 
   inline GLuint Programme() const { return programme_; }
 

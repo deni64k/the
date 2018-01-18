@@ -73,7 +73,7 @@ void DumpBmp(Image<T> const &bmp, char const *fname) {
 // * Fallback to a broader but uglier font if a character is not found.
 // * Handle negative bitmap_left, and rendering characters by negative coordinates, gracefully.
 // * Enable the alpha channel.
-Fallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
+OglFallible<Image<std::uint8_t[4]>> RenderFont(gsl::span<char const> text) {
   // https://www.freetype.org/freetype2/docs/tutorial/step1.html
   FT_Library library;
   FT_Error err;

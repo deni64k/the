@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "lib/common.hxx"
+#include "lib/utils.hxx"
 
 namespace the {
 
@@ -44,8 +45,8 @@ constexpr auto EnabledLogLevel = logging::details::kDebug;
 #define PANIC()                                                     \
   if (logging::details::kPanic <= EnabledLogLevel)                  \
     logging::details::LogRecord(std::cerr).stream()                 \
-        << "PANIC: " << __FILE__                                    \
-        << " [" << PRETTY_FUNCTION << ':' << __LINE__ << "]: "
+        << "PANIC: " << PP_WHERE << " `" << PP_FUNCTION << "': "
+        
 
 #define ERROR()                                                     \
   if (logging::details::kError <= EnabledLogLevel)                  \
@@ -55,14 +56,14 @@ constexpr auto EnabledLogLevel = logging::details::kDebug;
 #define WARN()                                                      \
   if (logging::details::kWarning <= EnabledLogLevel)                \
     logging::details::LogRecord(std::cerr).stream()                 \
-        << "WARN: "
+        << "WARN : "
 
 #define INFO()                                                      \
   if (logging::details::kInfo <= EnabledLogLevel)                   \
     logging::details::LogRecord(std::cerr).stream()                 \
-        << "INFO: "
+        << "INFO : "
 
 #define DEBUG()                                                     \
   if (logging::details::kDebug <= EnabledLogLevel)                  \
     logging::details::LogRecord(std::cerr).stream()                 \
-        << "DEBUG: " << PRETTY_FUNCTION << ':' << __LINE__ << ": "
+        << "DEBUG: " << PP_WHERE << " `" << PP_FUNCTION << "': "
