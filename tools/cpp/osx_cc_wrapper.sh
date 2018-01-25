@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Copyright 2015 The Bazel Authors. All rights reserved.
 #
@@ -34,12 +34,14 @@ function readlinkpath() {
     (cd "${dir}" 2>/dev/null && printf "%s/%s\n" "$(pwd -P)" ${link})
 }
 
-: ${GCC:=$(readlinkpath $(command -v gcc-7))}
+: ${GCC:=$(readlinkpath $(command -v gcc))}
+# GCC=$(readlinkpath /usr/local/bin/gcc-7)
 INSTALL_NAME_TOOL="/usr/bin/install_name_tool"
 
 LIBS=
 LIB_DIRS=
 RPATH=
+CPLUSPLUS=
 OUTPUT=
 # let parse the option list
 for i in "$@"; do
@@ -54,6 +56,9 @@ for i in "$@"; do
     elif [[ "$i" =~ ^-Wl,-rpath,\$ORIGIN/(.*)$ ]]; then
         # rpath
         RPATH=${BASH_REMATCH[1]}
+    elif [[ "$i" =~ ^-std=(c|gnu)\+\+..$ ]]; then
+        # C++ mode
+        CPLUSPLUS=1
     elif [[ "$i" = "-o" ]]; then
         # output is coming
         OUTPUT=1
@@ -61,7 +66,11 @@ for i in "$@"; do
 done
 
 # Call gcc
-${GCC} "$@"
+if [[ "${CPLUSPLUS}" = "1" ]]; then
+    "${GCC/gcc/g++}" "$@"
+else
+    "${GCC}" "$@"
+fi
 
 function get_library_path() {
     for libdir in ${LIB_DIRS}; do

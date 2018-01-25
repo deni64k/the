@@ -1,3 +1,57 @@
+workspace(name = "the")
+
+load("//tools/bazel_ext:patched_http_archive.bzl", "patched_http_archive")
+
+new_http_archive(
+    name = "gmp",
+    url = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.xz",
+    sha256 = "87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912",
+    # strip_prefix = "gmp-6.1.0",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"gmp-6.1.2\"], visibility = [\"//visibility:public\"])",
+)
+
+new_http_archive(
+    name = "mpfr",
+    url = "https://ftp.gnu.org/gnu/mpfr/mpfr-4.0.0.tar.xz",
+    sha256 = "fbe2cd1418b321f5c899ce4f0f0f4e73f5ecc7d02145b0e1fd096f5c3afb8a1d",
+    # strip_prefix = "mpfr-3.1.4",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"mpfr-4.0.0\"], visibility = [\"//visibility:public\"])",
+)
+
+new_http_archive(
+    name = "mpc",
+    url = "https://ftp.gnu.org/gnu/mpc/mpc-1.1.0.tar.gz",
+    sha256 = "6985c538143c1208dcb1ac42cedad6ff52e267b47e5f970183a3e75125b43c2e",
+    # strip_prefix = "mpc-1.0.3",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"mpc-1.1.0\"], visibility = [\"//visibility:public\"])",
+)
+
+new_http_archive(
+    name = "isl",
+    url = "http://gcc.gnu.org/pub/gcc/infrastructure/isl-0.18.tar.bz2",
+    sha256 = "6b8b0fd7f81d0a957beb3679c81bbb34ccc7568d5682844d8924424a0dadcb1b",
+    # strip_prefix = "isl-0.18",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"isl-0.18\"], visibility = [\"//visibility:public\"])",
+)
+
+new_http_archive(
+    name = "binutils",
+    # url = "https://ftp.gnu.org/gnu/binutils/binutils-2.29.1.tar.xz",
+    # sha256 = "e7010a46969f9d3e53b650a518663f98a5dde3c3ae21b7d71e5e6803bc36b577",
+    url = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2",
+    sha256 = "6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72",
+    # build_file_content = "filegroup(name = \"top\", srcs = [\"binutils-2.29.1\"], visibility = [\"//visibility:public\"])",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"binutils-2.28\"], visibility = [\"//visibility:public\"])",
+)
+
+new_http_archive(
+    name = "gcc",
+    url = "https://ftp.gnu.org/gnu/gcc/gcc-7.3.0/gcc-7.3.0.tar.xz",
+    sha256 = "832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c",
+    build_file_content = "filegroup(name = \"top\", srcs = [\"gcc-7.3.0\"], visibility = [\"//visibility:public\"])",
+    # build_file = "gcc.BUILD",
+)
+
 new_http_archive(
     name = "gtest",
     url = "https://github.com/google/googletest/archive/release-1.7.0.zip",
