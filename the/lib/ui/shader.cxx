@@ -1,10 +1,10 @@
 #include <gsl.h>
 #include <vector>
 
-#include "lib/ui/errors.hxx"
-#include "lib/ui/shader.hxx"
-#include "lib/utils.hxx"
-#include "lib/logging.hxx"
+#include "the/lib/common/logging.hxx"
+#include "the/lib/common/utils.hxx"
+#include "the/lib/ui/errors.hxx"
+#include "the/lib/ui/shader.hxx"
 
 namespace the::ui {
 

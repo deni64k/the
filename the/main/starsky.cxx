@@ -7,17 +7,17 @@
 #include <iostream>
 #include <utility>
 
-#include "lib/consts.hxx"
-#include "lib/logging.hxx"
-#include "lib/ppmxlreader.hxx"
-#include "lib/spheric.hxx"
-#include "lib/sun.hxx"
-#include "lib/time.hxx"
-#include "lib/ui/errors.hxx"
-#include "lib/ui/fonts.hxx"
-#include "lib/ui/graphics.hxx"
-#include "lib/ui/shader.hxx"
-#include "lib/utils.hxx"
+#include "the/lib/common/consts.hxx"
+#include "the/lib/common/logging.hxx"
+#include "the/lib/common/ppmxlreader.hxx"
+#include "the/lib/common/spheric.hxx"
+#include "the/lib/common/sun.hxx"
+#include "the/lib/common/time.hxx"
+#include "the/lib/common/utils.hxx"
+#include "the/lib/ui/errors.hxx"
+#include "the/lib/ui/fonts.hxx"
+#include "the/lib/ui/graphics.hxx"
+#include "the/lib/ui/shader.hxx"
 
 namespace chrono = std::chrono;
 
@@ -452,8 +452,8 @@ OglFallible<> GraphicsProgram::LoadShaders() {
   if (auto rv = this->Graphics::LoadShaders(); !rv)
     return std::move(rv);
 
-  auto vertexShader   = the::LoadFile("lib/shaders/text.vert.glsl");
-  auto fragmentShader = the::LoadFile("lib/shaders/text.frag.glsl");
+  auto vertexShader   = the::LoadFile("the/lib/ui/shaders/text.vert.glsl");
+  auto fragmentShader = the::LoadFile("the/lib/ui/shaders/text.frag.glsl");
 
   if (auto rv = textPipeline_.shader.CompileVertex(vertexShader); !rv)
     return std::move(rv);

@@ -1,7 +1,7 @@
 #include <thread>
 
-#include "lib/ui/graphics.hxx"
-#include "lib/ui/errors.hxx"
+#include "the/lib/ui/errors.hxx"
+#include "the/lib/ui/graphics.hxx"
 
 namespace the::ui {
 
@@ -79,8 +79,8 @@ OglFallible<> Graphics::Deinit() {
 }
 
 OglFallible<> Graphics::LoadShaders() {
-  auto vertexShader   = LoadFile("lib/shaders/vertex.glsl");
-  auto fragmentShader = LoadFile("lib/shaders/fragment.glsl");
+  auto vertexShader   = LoadFile("the/lib/ui/shaders/vertex.glsl");
+  auto fragmentShader = LoadFile("the/lib/ui/shaders/fragment.glsl");
 
   if (auto rv = starsPipeline_.shader.CompileVertex(vertexShader); !rv)
     return rv;

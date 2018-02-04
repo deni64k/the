@@ -5,8 +5,8 @@
 #include <iostream>
 #include <cstdint>
 
-#include "lib/common.hxx"
-#include "lib/utils.hxx"
+#include "common.hxx"
+#include "utils.hxx"
 
 namespace the {
 

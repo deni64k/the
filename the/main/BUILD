@@ -4,7 +4,7 @@ cc_binary(
         "coco.cxx",
     ]),
     deps = [
-        "//lib:libastrolabe",
+        "//the/lib:libcommon",
     ],
 )
 
@@ -15,7 +15,7 @@ cc_binary(
     ]),
     copts = ["-fextended-identifiers"],
     deps = [
-        "//lib:libastrolabe",
+        "//the/lib:libcommon",
     ],
 )
 
@@ -25,7 +25,8 @@ cc_binary(
         "starsky.cxx",
     ]),
     deps = [
-        "//lib:libastrolabe",
+        "//the/lib:libcommon",
+        "//the/lib:libui",
         "@freetype//:libfreetype",
     ],
 )

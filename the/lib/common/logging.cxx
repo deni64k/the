@@ -1,7 +1,7 @@
-#include "logging.hxx"
-
 #include <cstdarg>
 #include <cstdio>
+
+#include "logging.hxx"
 
 namespace the {
 

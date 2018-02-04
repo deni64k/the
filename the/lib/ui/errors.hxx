@@ -5,8 +5,8 @@
 
 #include <GL/glew.h>
 
-#include "lib/common.hxx"
-#include "lib/errors.hxx"
+#include "the/lib/common/common.hxx"
+#include "the/lib/common/errors.hxx"
 
 #define FALL_ON_GL_ERROR(...)                                           \
   if (auto const code = glGetError(); code != GL_NO_ERROR) {            \

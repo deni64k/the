@@ -34,8 +34,9 @@ function readlinkpath() {
     (cd "${dir}" 2>/dev/null && printf "%s/%s\n" "$(pwd -P)" ${link})
 }
 
-: ${GCC:=$(readlinkpath $(command -v gcc))}
-# GCC=$(readlinkpath /usr/local/bin/gcc-7)
+# : ${GCC:=$(readlinkpath $(command -v gcc))}
+: ${GCC:=$(readlinkpath /usr/local/bin/gcc-7)}
+: ${GXX:=$(dirname $GCC)/$(echo $(basename ${GCC}) | sed -e 's,clang,clang++,' -e 's,gcc,g++,')}
 INSTALL_NAME_TOOL="/usr/bin/install_name_tool"
 
 LIBS=
@@ -56,7 +57,7 @@ for i in "$@"; do
     elif [[ "$i" =~ ^-Wl,-rpath,\$ORIGIN/(.*)$ ]]; then
         # rpath
         RPATH=${BASH_REMATCH[1]}
-    elif [[ "$i" =~ ^-std=(c|gnu)\+\+..$ ]]; then
+    elif [[ "$i" =~ ^-std=(c|gnu)\+\+\d\d$ ]]; then
         # C++ mode
         CPLUSPLUS=1
     elif [[ "$i" = "-o" ]]; then
@@ -67,7 +68,7 @@ done
 
 # Call gcc
 if [[ "${CPLUSPLUS}" = "1" ]]; then
-    "${GCC/gcc/g++}" "$@"
+    "${GXX}" "$@"
 else
     "${GCC}" "$@"
 fi

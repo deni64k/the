@@ -7,8 +7,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "lib/logging.hxx"
-#include "lib/ui/fonts.hxx"
+#include "the/lib/common/logging.hxx"
+#include "the/lib/ui/fonts.hxx"
 
 #ifdef DEBUG
 # undef DEBUG

@@ -3,7 +3,7 @@
 #include <variant>
 #include <utility>
 
-#include "lib/common.hxx"
+#include "common.hxx"
 
 // #define _GNU_SOURCE
 // #define try

@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-#include "lib/utils.hxx"
+#include "the/lib/common/utils.hxx"
 
 namespace the::ui {
 

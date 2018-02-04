@@ -8,12 +8,12 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "lib/consts.hxx"
-#include "lib/errors.hxx"
-#include "lib/logging.hxx"
-#include "lib/mat.hxx"
-#include "lib/ui/errors.hxx"
-#include "lib/ui/shader.hxx"
+#include "the/lib/common/consts.hxx"
+#include "the/lib/common/errors.hxx"
+#include "the/lib/common/logging.hxx"
+#include "the/lib/common/mat.hxx"
+#include "the/lib/ui/errors.hxx"
+#include "the/lib/ui/shader.hxx"
 
 namespace the::ui {
 

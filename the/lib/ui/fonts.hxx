@@ -6,7 +6,7 @@
 
 #include <gsl.h>
 
-#include "lib/ui/errors.hxx"
+#include "the/lib/ui/errors.hxx"
 
 namespace the::ui {
 
